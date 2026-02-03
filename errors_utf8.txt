@@ -1,0 +1,32 @@
+﻿node.exe : (node:18996) 
+ExperimentalWarning: 
+CommonJS module C:\Users\ASU
+S\AppData\Roaming\npm\node_m
+odules\npm\node_modules\debu
+g\src\node.js is loading ES 
+Module C:\Users\ASUS\AppData
+\Roaming\npm\node_modules\np
+m\node_modules\supports-colo
+r\index.js using require().
+At C:\Program 
+Files\nodejs\npx.ps1:29 
+char:3
++   & $NODE_EXE $NPX_CLI_JS 
+$args
++   ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo          
+    : NotSpecified: ((node  
+  :18996) Ex...sing requi   
+ re().:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+Support for loading ES 
+Module in require() is an 
+experimental feature and 
+might change at any time
+(Use `node --trace-warnings 
+...` to show where the 
+warning was created)

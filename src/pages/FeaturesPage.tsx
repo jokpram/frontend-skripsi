@@ -20,56 +20,62 @@ const FeaturesPage = () => {
             icon: <ShieldCheck size={40} />,
             title: "Traceability End-to-End",
             description: "Lacak perjalanan udang dari kolam panen hingga ke tangan konsumen. Pastikan keaslian dan kualitas produk dengan data transparan yang tidak bisa dimanipulasi.",
-            color: "#10B981"
+            color: "text-emerald-500",
+            bg: "bg-emerald-500/10"
         },
         {
             icon: <Truck size={40} />,
             title: "Manajemen Logistik Cerdas",
             description: "Pantau pengiriman secara real-time. Sistem kami mengoptimalkan rute dan memastikan kondisi penyimpanan udang tetap terjaga selama distribusi.",
-            color: "#3B82F6"
+            color: "text-blue-500",
+            bg: "bg-blue-500/10"
         },
         {
             icon: <BarChart3 size={40} />,
             title: "Dashboard Analitik",
             description: "Wawasan mendalam untuk setiap peran. Petambak dapat memantau hasil panen, logistik memantau armada, dan admin mengawasi keseluruhan ekosistem.",
-            color: "#F59E0B"
+            color: "text-amber-500",
+            bg: "bg-amber-500/10"
         },
         {
             icon: <Users size={40} />,
             title: "Multi-Role System",
             description: "Platform terintegrasi yang menghubungkan Petambak, Logistik, Konsumen, dan Admin dalam satu ekosistem yang harmonis dan efisien.",
-            color: "#8B5CF6"
+            color: "text-violet-500",
+            bg: "bg-violet-500/10"
         },
         {
             icon: <Database size={40} />,
             title: "Pencatatan Digital",
             description: "Digitalisasi pencatatan tambak mulai dari benur, pakan, hingga panen. Ucapkan selamat tinggal pada catatan kertas yang mudah hilang.",
-            color: "#EC4899"
+            color: "text-pink-500",
+            bg: "bg-pink-500/10"
         },
         {
             icon: <Lock size={40} />,
             title: "Keamanan Terjamin",
             description: "Data Anda aman bersama kami. Sistem otentikasi berlapis dan enkripsi data memastikan informasi bisnis Anda tetap rahasia.",
-            color: "#6366F1"
+            color: "text-indigo-500",
+            bg: "bg-indigo-500/10"
         }
     ];
 
     return (
-        <div style={{ padding: '8rem 1rem 4rem', minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-            <div className="container">
-                <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
+        <div className="pt-32 pb-16 min-h-screen bg-slate-50">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-20">
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        style={{ fontSize: '3rem', fontWeight: 800, color: '#111827', marginBottom: '1.5rem' }}
+                        className="text-5xl font-extrabold text-slate-900 mb-6"
                     >
-                        Fitur Unggulan <span style={{ color: '#10B981' }}>CRONOS</span>
+                        Fitur Unggulan <span className="text-emerald-500">CRONOS</span>
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        style={{ fontSize: '1.25rem', color: '#6b7280', maxWidth: '700px', margin: '0 auto' }}
+                        className="text-xl text-slate-500 max-w-2xl mx-auto"
                     >
                         Solusi teknologi komprehensif untuk memodernisasi rantai pasok industri udang Indonesia.
                     </motion.p>
@@ -79,37 +85,20 @@ const FeaturesPage = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
                     {features.map((feature, idx) => (
                         <motion.div
                             key={idx}
                             variants={itemVariants}
-                            style={{
-                                backgroundColor: 'white',
-                                padding: '2.5rem',
-                                borderRadius: '1.5rem',
-                                border: '1px solid #e5e7eb',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-                                transition: 'transform 0.2s',
-                            }}
-                            whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                            className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300"
+                            whileHover={{ y: -5 }}
                         >
-                            <div style={{
-                                width: '4rem',
-                                height: '4rem',
-                                borderRadius: '1rem',
-                                backgroundColor: `${feature.color}20`,
-                                color: feature.color,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: '1.5rem'
-                            }}>
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${feature.bg} ${feature.color}`}>
                                 {feature.icon}
                             </div>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>{feature.title}</h3>
-                            <p style={{ color: '#6b7280', lineHeight: 1.6 }}>{feature.description}</p>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-4">{feature.title}</h3>
+                            <p className="text-slate-500 leading-relaxed">{feature.description}</p>
                         </motion.div>
                     ))}
                 </motion.div>

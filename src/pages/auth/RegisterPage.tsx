@@ -23,7 +23,6 @@ const RegisterPage = () => {
         password: '',
         confirmPassword: '',
         phone: '',
-        // Role specific
         address: '',
         vehicle_type: '',
         license_plate: ''
@@ -41,8 +40,7 @@ const RegisterPage = () => {
         setIsLoading(true);
 
         try {
-            // Filter data required for role
-            const payload: any = {
+            const payload: Record<string, any> = {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
@@ -58,10 +56,12 @@ const RegisterPage = () => {
             }
 
             await register(role, payload);
-            toast.success('Registrasi berhasil! Silahkan masuk setelah akun diverifikasi admin.');
+            toast.success('Registrasi berhasil! Silahkan masuk setelah diverifikasi.');
             navigate('/login');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Registrasi gagal');
+            const apiError = err as { response?: { data?: { message?: string } } };
+            setError(apiError.response?.data?.message || 'Registrasi gagal');
+            toast.error('Gagal mendaftar');
         } finally {
             setIsLoading(false);
         }
@@ -72,79 +72,77 @@ const RegisterPage = () => {
     };
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0fdf4', padding: '1rem' }}>
+        <div className="min-h-screen py-24 flex items-center justify-center bg-emerald-50 px-4">
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                style={{ width: '100%', maxWidth: '600px', backgroundColor: 'white', borderRadius: '1rem', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                className="w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl shadow-emerald-200/50 p-8 md:p-12"
             >
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div style={{ display: 'inline-flex', padding: '0.75rem', borderRadius: '50%', backgroundColor: '#d1fae5', color: '#059669', marginBottom: '1rem' }}>
-                        <Anchor size={32} />
+                <div className="text-center mb-10">
+                    <div className="inline-flex p-4 rounded-3xl bg-emerald-100 text-emerald-600 mb-6 shadow-sm">
+                        <Anchor size={40} />
                     </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1f2937' }}>Buat Akun Baru</h2>
-                    <p style={{ color: '#6b7280' }}>Bergabung dengan CRONOS</p>
+                    <h2 className="text-3xl font-black text-slate-900">Buat Akun Baru</h2>
+                    <p className="text-slate-500 font-medium">Bergabung dengan ekosistem CRONOS hari ini.</p>
                 </div>
 
                 {/* Role Tabs */}
-                <div style={{ display: 'flex', backgroundColor: '#f3f4f6', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-10 overflow-hidden">
                     {roles.map((r) => (
                         <button
                             key={r.id}
                             type="button"
                             onClick={() => setRole(r.id)}
-                            style={{
-                                flex: 1,
-                                padding: '0.5rem',
-                                fontSize: '0.875rem',
-                                borderRadius: '0.375rem',
-                                backgroundColor: role === r.id ? 'white' : 'transparent',
-                                color: role === r.id ? '#059669' : '#6b7280',
-                                fontWeight: role === r.id ? 600 : 400,
-                                boxShadow: role === r.id ? '0 1px 2px 0 rgba(0, 0, 0, 0.05)' : 'none',
-                                transition: 'all 0.2s',
-                            }}
+                            className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${role === r.id ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-400 hover:text-slate-600'
+                                }`}
                         >
                             {r.label}
                         </button>
                     ))}
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div style={{ gridColumn: 'span 2' }}>
-                        <Input name="name" label="Nama Lengkap" placeholder="Nama Lengkap" value={formData.name} onChange={handleChange} required />
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="md:col-span-2">
+                        <Input name="name" label="Nama Lengkap" placeholder="John Doe" value={formData.name} onChange={handleChange} required />
                     </div>
 
-                    <Input name="email" label="Email" type="email" placeholder="nama@email.com" value={formData.email} onChange={handleChange} required />
-                    <Input name="phone" label="Nomor Telepon" placeholder="08..." value={formData.phone} onChange={handleChange} required />
+                    <Input name="email" label="Email Address" type="email" placeholder="john@example.com" value={formData.email} onChange={handleChange} required />
+                    <Input name="phone" label="Nomor Telepon" placeholder="0812..." value={formData.phone} onChange={handleChange} required />
 
                     <Input name="password" label="Password" type="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required />
                     <Input name="confirmPassword" label="Konfirmasi Password" type="password" placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} required />
 
                     {/* Dynamic Fields */}
                     {(role === 'petambak' || role === 'konsumen') && (
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <Input name="address" label="Alamat Lengkap" placeholder="Alamat lengkap..." value={formData.address} onChange={handleChange} required />
+                        <div className="md:col-span-2">
+                            <Input name="address" label="Alamat Lengkap" placeholder="Jl. Raya No. 123..." value={formData.address} onChange={handleChange} required />
                         </div>
                     )}
 
                     {role === 'logistik' && (
                         <>
-                            <Input name="vehicle_type" label="Jenis Kendaraan" placeholder="Truk, Van, dll" value={formData.vehicle_type} onChange={handleChange} required />
-                            <Input name="license_plate" label="Plat Nomor" placeholder="B 1234 CD" value={formData.license_plate} onChange={handleChange} required />
+                            <Input name="vehicle_type" label="Jenis Kendaraan" placeholder="Truk Pendingin" value={formData.vehicle_type} onChange={handleChange} required />
+                            <Input name="license_plate" label="Plat Nomor" placeholder="B 1234 XY" value={formData.license_plate} onChange={handleChange} required />
                         </>
                     )}
 
-                    <div style={{ gridColumn: 'span 2' }}>
-                        {error && <div style={{ padding: '0.75rem', backgroundColor: '#FEE2E2', color: '#B91C1C', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
-                        <Button type="submit" style={{ width: '100%' }} disabled={isLoading}>
+                    <div className="md:col-span-2 mt-8">
+                        {error && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-red-50 text-red-600 rounded-xl mb-6 text-sm font-medium border border-red-100 italic">
+                                * {error}
+                            </motion.div>
+                        )}
+                        <Button type="submit" className="w-full py-4 text-lg shadow-xl shadow-emerald-500/20" disabled={isLoading}>
                             {isLoading ? 'Mendaftar...' : 'Daftar Sekarang'}
                         </Button>
                     </div>
                 </form>
 
-                <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                    Sudah punya akun? <Link to="/login" style={{ color: '#059669', fontWeight: 600 }}>Masuk</Link>
+                <p className="text-center mt-8 text-slate-500 font-medium">
+                    Sudah punya akun?{' '}
+                    <Link to="/login" className="text-emerald-600 font-black hover:underline">
+                        Masuk Disini
+                    </Link>
                 </p>
             </motion.div>
         </div>

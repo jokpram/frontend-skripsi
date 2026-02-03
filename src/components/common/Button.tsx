@@ -1,55 +1,36 @@
 import React from 'react';
-import { clsx, type ClassValue } from 'clsx';
+import { clsx } from 'clsx';
+import type { ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-// Utility for class merging
+// Utility for class merging (added tailwind-merge)
 export function cn(...inputs: ClassValue[]) {
-    return clsx(inputs);
+    return twMerge(clsx(inputs));
 }
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'outline' | 'ghost';
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button = ({
     className,
     variant = 'primary',
     children,
-    style,
     ...props
-}) => {
-    const baseStyles: React.CSSProperties = {
-        padding: '0.75rem 1.5rem',
-        borderRadius: '0.5rem',
-        fontWeight: 600,
-        transition: 'all 0.2s',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        cursor: 'pointer',
-        border: 'none',
-    };
-
+}: ButtonProps) => {
     const variants = {
-        primary: {
-            backgroundColor: 'var(--color-primary)',
-            color: 'white',
-        },
-        outline: {
-            border: '2px solid var(--color-primary)',
-            color: 'var(--color-primary)',
-            backgroundColor: 'transparent',
-        },
-        ghost: {
-            backgroundColor: 'transparent',
-            color: 'var(--color-text-muted)',
-        }
+        primary: 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm border-transparent',
+        outline: 'bg-transparent border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50',
+        ghost: 'bg-transparent text-slate-500 hover:bg-slate-50',
     };
 
     return (
         <button
-            className={clsx(className)}
-            style={{ ...baseStyles, ...variants[variant], ...style }}
+            className={cn(
+                'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border',
+                variants[variant],
+                className
+            )}
             {...props}
         >
             {children}

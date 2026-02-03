@@ -2,7 +2,7 @@
 
 ## Setup
 
-Testing menggunakan **Vitest**, **React Testing Library**, dan **jsdom**.
+Testing menggunakan **Vitest**, **React Testing Library**, **Redux Toolkit**, **TanStack Query**, dan **Tailwind CSS**.
 
 ### Dependencies
 ```bash
@@ -11,8 +11,10 @@ npm install --save-dev vitest @vitest/coverage-v8 jsdom @testing-library/react @
 
 ### Configuration
 
-- `vite.config.ts` - Ditambahkan properti `test` untuk konfigurasi Vitest.
+- `vite.config.ts` - Ditambahkan properti `test` dan plugin `@tailwindcss/vite`.
 - `src/test/setup.ts` - Konfigurasi global `@testing-library/jest-dom`.
+- `src/store/` - Management state terpusat.
+- `src/hooks/api/` - Logic pemanggilan API menggunakan TanStack Query.
 
 ---
 

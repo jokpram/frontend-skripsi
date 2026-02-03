@@ -109,60 +109,42 @@ const KonsumenDashboard = () => {
     const formatCurrency = (amount: number) => `Rp ${Number(amount).toLocaleString('id-ID')}`;
 
     const getStatusStyle = (status: string) => {
-        const styles: Record<string, { bg: string; color: string }> = {
-            'PENDING': { bg: '#fef3c7', color: '#92400e' },
-            'PAID': { bg: '#dbeafe', color: '#1e40af' },
-            'SHIPPED': { bg: '#e0e7ff', color: '#3730a3' },
-            'DELIVERED': { bg: '#d1fae5', color: '#065f46' },
-            'COMPLETED': { bg: '#ecfdf5', color: '#059669' },
-            'CANCELLED': { bg: '#fee2e2', color: '#991b1b' },
+        const styles: Record<string, string> = {
+            'PENDING': 'bg-amber-100 text-amber-800',
+            'PAID': 'bg-blue-100 text-blue-800',
+            'SHIPPED': 'bg-indigo-100 text-indigo-800',
+            'DELIVERED': 'bg-emerald-100 text-emerald-800',
+            'COMPLETED': 'bg-emerald-50 text-emerald-600',
+            'CANCELLED': 'bg-red-100 text-red-800',
         };
-        return styles[status] || { bg: '#f3f4f6', color: '#6b7280' };
+        return styles[status] || 'bg-slate-100 text-slate-600';
     };
 
     return (
-        <div className="container" style={{ paddingTop: '6rem', paddingBottom: '3rem' }}>
-            <header style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#064e3b' }}>
+        <div className="container mx-auto px-4 pt-24 pb-12 min-h-screen bg-slate-50">
+            <header className="mb-8">
+                <h1 className="text-4xl font-black text-emerald-900 mb-2">
                     {activeTab === 'shop' ? 'Marketplace Udang Segar' : 'Pesanan Saya'}
                 </h1>
-                <p style={{ color: '#6b7280' }}>
+                <p className="text-slate-500 text-lg">
                     {activeTab === 'shop' ? 'Beli udang berkualitas langsung dari petambak terverifikasi' : 'Lacak status pesanan Anda'}
                 </p>
             </header>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', backgroundColor: '#f3f4f6', padding: '0.25rem', borderRadius: '0.75rem', width: 'fit-content' }}>
+            <div className="flex bg-slate-200/50 p-1.5 rounded-2xl mb-8 w-fit shadow-inner">
                 <button
                     onClick={() => setActiveTab('shop')}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '0.5rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                        backgroundColor: activeTab === 'shop' ? 'white' : 'transparent',
-                        color: activeTab === 'shop' ? '#059669' : '#6b7280',
-                        fontWeight: activeTab === 'shop' ? 600 : 400,
-                        boxShadow: activeTab === 'shop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                    }}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-bold text-sm ${activeTab === 'shop' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-500'}`}
                 >
-                    <ShoppingCart size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    <ShoppingCart size={18} className="mr-2" />
                     Belanja
                 </button>
                 <button
                     onClick={() => setActiveTab('orders')}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '0.5rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                        backgroundColor: activeTab === 'orders' ? 'white' : 'transparent',
-                        color: activeTab === 'orders' ? '#059669' : '#6b7280',
-                        fontWeight: activeTab === 'orders' ? 600 : 400,
-                        boxShadow: activeTab === 'orders' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                    }}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-bold text-sm ${activeTab === 'orders' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-500'}`}
                 >
-                    <Package size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    <Package size={18} className="mr-2" />
                     Pesanan ({orders.length})
                 </button>
             </div>
@@ -170,59 +152,55 @@ const KonsumenDashboard = () => {
             {activeTab === 'shop' ? (
                 <>
                     {/* Search */}
-                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
-                            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+                    <div className="flex gap-4 mb-8 flex-wrap">
+                        <div className="flex-1 min-w-[200px] relative">
+                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
                                 type="text"
                                 placeholder="Cari jenis udang atau grade..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                    borderRadius: '0.75rem',
-                                    border: '1px solid #e5e7eb',
-                                    fontSize: '0.95rem'
-                                }}
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
                             />
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '2rem' }}>
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
                         {/* Product Grid */}
                         <div>
                             {isLoading ? (
-                                <p style={{ color: '#6b7280' }}>Memuat produk...</p>
+                                <p className="text-slate-500">Memuat produk...</p>
                             ) : filteredProducts.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', backgroundColor: 'white', borderRadius: '1rem' }}>
-                                    <Package size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                                    <p>Tidak ada produk ditemukan</p>
+                                <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Package size={32} className="text-slate-400" />
+                                    </div>
+                                    <p className="text-slate-500">Tidak ada produk ditemukan</p>
                                 </div>
                             ) : (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.5rem' }}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {filteredProducts.map(product => (
-                                        <div key={product.id} style={{ backgroundColor: 'white', borderRadius: '1rem', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
-                                            <div style={{ height: '120px', backgroundColor: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}>
+                                        <div key={product.id} className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+                                            <div className="h-32 bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-105 transition-transform duration-500">
                                                 <Package size={40} />
                                             </div>
-                                            <div style={{ padding: '1.25rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                    <h3 style={{ fontWeight: 700, fontSize: '0.95rem' }}>{product.jenis_udang}</h3>
-                                                    <span style={{ fontSize: '0.65rem', backgroundColor: '#dbeafe', color: '#1e40af', padding: '0.15rem 0.4rem', borderRadius: '1rem', fontWeight: 600 }}>
+                                            <div className="p-6">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h3 className="font-bold text-slate-900">{product.jenis_udang}</h3>
+                                                    <span className="px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-600">
                                                         Grade {product.grade}
                                                     </span>
                                                 </div>
-                                                <p style={{ fontSize: '1rem', fontWeight: 700, color: '#059669', marginBottom: '0.5rem' }}>
-                                                    {formatCurrency(Number(product.harga_per_kg))} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#6b7280' }}>/ kg</span>
+                                                <p className="text-lg font-black text-emerald-600 mb-2">
+                                                    {formatCurrency(Number(product.harga_per_kg))} <span className="text-xs font-normal text-slate-400">/ kg</span>
                                                 </p>
-                                                <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '1rem' }}>Stok: {product.stok_kg} kg</p>
+                                                <p className="text-sm text-slate-500 mb-6">Stok: {product.stok_kg} kg</p>
                                                 <Button
                                                     onClick={() => addToCart(product)}
-                                                    style={{ width: '100%', fontSize: '0.85rem' }}
+                                                    className="w-full text-sm py-2.5"
                                                     disabled={product.stok_kg <= 0}
                                                 >
-                                                    <ShoppingCart size={14} /> {product.stok_kg > 0 ? 'Tambah' : 'Habis'}
+                                                    <ShoppingCart size={16} className="mr-2" /> {product.stok_kg > 0 ? 'Tambah' : 'Habis'}
                                                 </Button>
                                             </div>
                                         </div>
@@ -232,36 +210,42 @@ const KonsumenDashboard = () => {
                         </div>
 
                         {/* Cart Sidebar */}
-                        <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e5e7eb', height: 'fit-content', position: 'sticky', top: '6rem' }}>
-                            <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm h-fit sticky top-24">
+                            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-900">
                                 <ShoppingCart size={20} /> Keranjang
                             </h3>
                             {cart.length === 0 ? (
-                                <p style={{ color: '#9ca3af', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>Keranjang kosong</p>
+                                <div className="text-center py-8 text-slate-400 text-sm">
+                                    <p>Keranjang kosong</p>
+                                </div>
                             ) : (
                                 <>
-                                    {cart.map(item => (
-                                        <div key={item.produk_id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.product.jenis_udang}</p>
-                                                <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#059669' }}>
-                                                    {formatCurrency(Number(item.product.harga_per_kg) * item.qty)}
-                                                </p>
+                                    <div className="space-y-4 mb-6">
+                                        {cart.map(item => (
+                                            <div key={item.produk_id} className="pb-4 border-b border-slate-50 last:border-0 last:pb-0">
+                                                <div className="flex justify-between mb-2">
+                                                    <p className="font-semibold text-sm text-slate-900">{item.product.jenis_udang}</p>
+                                                    <p className="font-bold text-sm text-emerald-600">
+                                                        {formatCurrency(Number(item.product.harga_per_kg) * item.qty)}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <button onClick={() => updateCartQty(item.produk_id, item.qty - 1)} className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-600 transition-colors">-</button>
+                                                    <span className="font-medium text-slate-900 text-sm">{item.qty} kg</span>
+                                                    <button onClick={() => updateCartQty(item.produk_id, item.qty + 1)} className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-600 transition-colors">+</button>
+                                                </div>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <button onClick={() => updateCartQty(item.produk_id, item.qty - 1)} style={{ width: '28px', height: '28px', borderRadius: '0.25rem', border: '1px solid #e5e7eb', cursor: 'pointer', backgroundColor: 'white' }}>-</button>
-                                                <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{item.qty} kg</span>
-                                                <button onClick={() => updateCartQty(item.produk_id, item.qty + 1)} style={{ width: '28px', height: '28px', borderRadius: '0.25rem', border: '1px solid #e5e7eb', cursor: 'pointer', backgroundColor: 'white' }}>+</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #e5e7eb' }}>
-                                        <span style={{ fontWeight: 700 }}>Total:</span>
-                                        <span style={{ fontWeight: 700, color: '#059669', fontSize: '1.1rem' }}>{formatCurrency(totalCartPrice)}</span>
+                                        ))}
                                     </div>
-                                    <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>+ Ongkos kirim dihitung saat checkout</p>
-                                    <Button onClick={handleCheckout} style={{ width: '100%', marginTop: '1rem' }}>
-                                        <CreditCard size={16} /> Checkout
+                                    <div className="pt-4 border-t-2 border-slate-100 mb-4">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="font-bold text-slate-900">Total</span>
+                                            <span className="font-black text-xl text-emerald-600">{formatCurrency(totalCartPrice)}</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 text-right">+ Ongkos kirim dihitung saat checkout</p>
+                                    </div>
+                                    <Button onClick={handleCheckout} className="w-full shadow-lg shadow-emerald-500/20">
+                                        <CreditCard size={18} className="mr-2" /> Checkout
                                     </Button>
                                 </>
                             )}
@@ -270,51 +254,49 @@ const KonsumenDashboard = () => {
                 </>
             ) : (
                 /* Orders Tab */
-                <div>
+                <div className="max-w-4xl">
                     {orders.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', backgroundColor: 'white', borderRadius: '1rem' }}>
-                            <Package size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                            <p>Belum ada pesanan</p>
+                        <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Package size={32} className="text-slate-400" />
+                            </div>
+                            <p className="text-slate-500">Belum ada pesanan</p>
                         </div>
                     ) : (
-                        <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div className="grid gap-6">
                             {orders.map(order => (
-                                <div key={order.id} style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                <div key={order.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                                    <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
                                         <div>
-                                            <h3 style={{ fontWeight: 700, fontSize: '1.1rem' }}>Order #{order.id}</h3>
-                                            <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>{new Date(order.created_at || '').toLocaleDateString('id-ID')}</p>
+                                            <h3 className="font-bold text-lg text-slate-900">Order #{order.id}</h3>
+                                            <p className="text-xs text-slate-500">{new Date(order.created_at || '').toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                         </div>
-                                        <span style={{
-                                            backgroundColor: getStatusStyle(order.status).bg,
-                                            color: getStatusStyle(order.status).color,
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '1rem',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 600
-                                        }}>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${getStatusStyle(order.status)}`}>
                                             {order.status}
                                         </span>
                                     </div>
 
-                                    <div style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '1rem' }}>
+                                    <div className="bg-slate-50 rounded-2xl p-4 mb-4 space-y-2">
                                         {order.OrderItems?.map((item, idx) => (
-                                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0' }}>
-                                                <span>{item.UdangProduk?.jenis_udang} ({item.qty_kg} kg)</span>
-                                                <span>{formatCurrency(item.subtotal)}</span>
+                                            <div key={idx} className="flex justify-between text-sm">
+                                                <span className="text-slate-700">{item.UdangProduk?.jenis_udang} <span className="text-slate-400">x {item.qty_kg} kg</span></span>
+                                                <span className="font-medium text-slate-900">{formatCurrency(item.subtotal)}</span>
                                             </div>
                                         ))}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', color: '#6b7280' }}>
-                                            <span><Truck size={14} style={{ display: 'inline', marginRight: '0.25rem' }} /> Ongkir ({order.total_jarak_km} km)</span>
+                                        <div className="flex justify-between text-sm pt-2 border-t border-slate-200 text-slate-500">
+                                            <span className="flex items-center gap-1"><Truck size={14} /> Ongkir ({order.total_jarak_km} km)</span>
                                             <span>{formatCurrency(Number(order.total_biaya_logistik))}</span>
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
-                                        <span style={{ fontWeight: 700 }}>Total: {formatCurrency(Number(order.total_harga))}</span>
+                                    <div className="flex justify-between items-center pt-2">
+                                        <div>
+                                            <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Total Pembayaran</p>
+                                            <p className="font-black text-xl text-emerald-600">{formatCurrency(Number(order.total_harga))}</p>
+                                        </div>
                                         {order.status === 'SHIPPED' && order.Delivery && (
-                                            <Button onClick={() => setShowQRModal(true)} style={{ fontSize: '0.85rem' }}>
-                                                <QrCode size={16} /> Konfirmasi Terima
+                                            <Button onClick={() => setShowQRModal(true)} className="px-6">
+                                                <QrCode size={18} className="mr-2" /> Konfirmasi Terima
                                             </Button>
                                         )}
                                     </div>
@@ -327,12 +309,12 @@ const KonsumenDashboard = () => {
 
             {/* QR Confirm Modal */}
             {showQRModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-                    <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '400px' }}>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <QrCode size={24} /> Konfirmasi Penerimaan
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl">
+                        <h2 className="text-2xl font-black text-slate-900 mb-4 flex items-center gap-3">
+                            <QrCode size={28} className="text-emerald-600" /> Konfirmasi Penerimaan
                         </h2>
-                        <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                        <p className="text-slate-500 text-sm mb-6">
                             Masukkan token QR dari kurir untuk mengkonfirmasi penerimaan pesanan.
                         </p>
                         <Input
@@ -341,10 +323,10 @@ const KonsumenDashboard = () => {
                             value={qrToken}
                             onChange={(e) => setQrToken(e.target.value)}
                         />
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                            <Button variant="outline" onClick={() => setShowQRModal(false)} style={{ flex: 1 }}>Batal</Button>
-                            <Button onClick={handleConfirmReceive} style={{ flex: 1 }}>
-                                <Check size={16} /> Konfirmasi
+                        <div className="flex gap-4 mt-6">
+                            <Button variant="outline" onClick={() => setShowQRModal(false)} className="flex-1">Batal</Button>
+                            <Button onClick={handleConfirmReceive} className="flex-1">
+                                <Check size={18} className="mr-2" /> Konfirmasi
                             </Button>
                         </div>
                     </div>

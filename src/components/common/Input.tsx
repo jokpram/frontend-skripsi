@@ -1,49 +1,32 @@
 import React from 'react';
-import { clsx } from 'clsx';
-
+import { cn } from './Button';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label: string;
     error?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, className, style, ...props }) => {
+export const Input = ({ label, error, className, ...props }: InputProps) => {
     return (
-        <div style={{ marginBottom: '1rem', width: '100%' }}>
+        <div className="mb-4 w-full">
             <label
                 htmlFor={props.id || label}
-                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--color-text-main)' }}
+                className="block mb-2 font-medium text-slate-700"
             >
                 {label}
             </label>
             <input
                 id={props.id || label}
-                className={clsx(className)}
-                style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    borderRadius: '0.75rem',
-                    border: `1.5px solid ${error ? '#EF4444' : '#E5E7EB'}`,
-                    outline: 'none',
-                    transition: 'all 0.2s',
-                    fontSize: '0.95rem',
-                    backgroundColor: '#F9FAFB',
-                    color: '#1F2937',
-                    ...style as React.CSSProperties // Merge parent styles here
-                }}
-                onFocus={(e) => {
-                    e.target.style.borderColor = 'var(--color-primary)';
-                    e.target.style.backgroundColor = '#FFFFFF';
-                    e.target.style.boxShadow = '0 0 0 4px var(--color-primary-light)';
-                }}
-                onBlur={(e) => {
-                    e.target.style.borderColor = error ? '#EF4444' : '#E5E7EB';
-                    e.target.style.backgroundColor = '#F9FAFB';
-                    e.target.style.boxShadow = 'none';
-                }}
+                className={cn(
+                    'w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none flex-1',
+                    'bg-slate-50 text-slate-900 border-slate-200 placeholder:text-slate-400',
+                    'focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10',
+                    error && 'border-red-500 focus:border-red-500 focus:ring-red-500/10',
+                    className
+                )}
                 {...props}
             />
-            {error && <span style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>{error}</span>}
+            {error && <span className="text-red-500 text-sm mt-1.5 block animate-in fade-in slide-in-from-top-1">{error}</span>}
         </div>
     );
 };

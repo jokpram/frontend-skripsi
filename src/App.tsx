@@ -1,24 +1,27 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { useSelector } from 'react-redux';
 import { Navbar } from './components/common/Navbar';
+import { Footer } from './components/common/Footer';
 import LandingPage from './pages/LandingPage';
 import FeaturesPage from './pages/FeaturesPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import TraceabilityPage from './pages/products/Traceability';
+import type { RootState } from './store';
 
 // Dashboards
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import PetambakDashboard from './pages/dashboard/PetambakDashboard';
 import LogistikDashboard from './pages/dashboard/LogistikDashboard';
 import KonsumenDashboard from './pages/dashboard/KonsumenDashboard';
-const AccessDenied = () => <div className="container" style={{ paddingTop: '6rem' }}><h1>Access Denied</h1></div>;
+
+const AccessDenied = () => <div className="pt-24 container mx-auto px-4"><h1 className="text-2xl font-bold text-red-600">Access Denied</h1><p>You do not have permission to view this page.</p></div>;
 
 const DashboardRouter = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  if (!user) return <Navigate to="/login" />;
+  if (!isAuthenticated || !user) return <Navigate to="/login" />;
 
   switch (user.role) {
     case 'admin': return <AdminDashboard />;
@@ -31,25 +34,30 @@ const DashboardRouter = () => {
 
 function App() {
   return (
-    <AuthProvider>
+    <>
       <Toaster position="top-right" reverseOrder={false} />
       <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/features" element={<FeaturesPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/traceability" element={<TraceabilityPage />} />
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/traceability" element={<TraceabilityPage />} />
 
-          {/* Protected Routes */}
-          <Route path="/dashboard" element={<DashboardRouter />} />
+              {/* Protected Routes */}
+              <Route path="/dashboard" element={<DashboardRouter />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
       </Router>
-    </AuthProvider>
+    </>
   );
 }
 

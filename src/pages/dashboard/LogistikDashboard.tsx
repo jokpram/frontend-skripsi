@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
+import type { FormEvent } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { Scan, Truck, MapPin, Check, Package, DollarSign, ArrowRight, User } from 'lucide-react';
+import { Scan, Truck, MapPin, Check, Package, DollarSign, User } from 'lucide-react';
 import type { Delivery, Wallet } from '../../types/models';
 
 const LogistikDashboard = () => {
     const [qrToken, setQrToken] = useState('');
-    const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
+    const [availableDeliveries, setAvailableDeliveries] = useState<Delivery[]>([]);
     const [myDeliveries, setMyDeliveries] = useState<Delivery[]>([]);
     const [wallet, setWallet] = useState<Wallet | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +37,7 @@ const LogistikDashboard = () => {
         }
     };
 
-    const handleScanPickup = async (e: React.FormEvent) => {
+    const handleScanPickup = async (e: FormEvent) => {
         e.preventDefault();
         if (!qrToken.trim()) {
             toast.error('Masukkan token QR');
@@ -57,41 +58,43 @@ const LogistikDashboard = () => {
     };
 
     const getStatusStyle = (status: string) => {
-        const styles: Record<string, { bg: string; color: string }> = {
-            'PENDING': { bg: '#fef3c7', color: '#92400e' },
-            'PICKED_UP': { bg: '#dbeafe', color: '#1e40af' },
-            'DELIVERED': { bg: '#d1fae5', color: '#065f46' },
-            'COMPLETED': { bg: '#ecfdf5', color: '#059669' },
+        const styles: Record<string, string> = {
+            'PENDING': 'bg-amber-100 text-amber-800',
+            'PICKED_UP': 'bg-blue-100 text-blue-800',
+            'DELIVERED': 'bg-emerald-100 text-emerald-800',
+            'COMPLETED': 'bg-emerald-50 text-emerald-600',
         };
-        return styles[status] || { bg: '#f3f4f6', color: '#6b7280' };
+        return styles[status] || 'bg-slate-100 text-slate-600';
     };
 
     return (
-        <div className="container" style={{ paddingTop: '6rem', paddingBottom: '3rem' }}>
-            <header style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#064e3b' }}>Dashboard Logistik</h1>
-                <p style={{ color: '#6b7280' }}>Kelola pengiriman dan scan barang</p>
+        <div className="container mx-auto px-4 pt-24 pb-12 min-h-screen bg-slate-50">
+            <header className="mb-8">
+                <h1 className="text-4xl font-black text-emerald-900 mb-2">Dashboard Logistik</h1>
+                <p className="text-slate-500 text-lg">Kelola pengiriman dan scan barang</p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Wallet Section */}
-                <section style={{ background: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)', padding: '2rem', borderRadius: '1rem', color: 'white' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                        <DollarSign size={28} />
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Saldo Wallet</h2>
+                <section className="bg-gradient-to-br from-emerald-900 to-emerald-600 p-8 rounded-3xl text-white shadow-xl">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                            <DollarSign size={28} />
+                        </div>
+                        <h2 className="text-xl font-bold">Saldo Wallet</h2>
                     </div>
-                    <p style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+                    <p className="text-4xl font-black mb-2">
                         {wallet ? formatCurrency(wallet.balance) : 'Rp 0'}
                     </p>
-                    <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Pendapatan dari pengiriman</p>
+                    <p className="text-emerald-100 text-sm opacity-80">Pendapatan dari pengiriman</p>
 
                     {wallet?.transactions && wallet.transactions.length > 0 && (
-                        <div style={{ marginTop: '1.5rem', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '1rem' }}>
-                            <p style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Transaksi Terakhir:</p>
+                        <div className="mt-6 bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+                            <p className="text-xs font-bold uppercase tracking-widest mb-2 opacity-70">Transaksi Terakhir:</p>
                             {wallet.transactions.slice(0, 3).map(tx => (
-                                <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.25rem 0' }}>
+                                <div key={tx.id} className="flex justify-between text-sm py-1 border-b border-white/5 last:border-0">
                                     <span>{tx.source}</span>
-                                    <span style={{ color: tx.type === 'CREDIT' ? '#a7f3d0' : '#fca5a5' }}>
+                                    <span className={tx.type === 'CREDIT' ? 'text-emerald-200' : 'text-red-200'}>
                                         {tx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(tx.amount)}
                                     </span>
                                 </div>
@@ -101,100 +104,86 @@ const LogistikDashboard = () => {
                 </section>
 
                 {/* Scan Pickup Section */}
-                <section style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', color: '#059669' }}>
-                        <Scan size={32} />
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Scan Pickup</h2>
+                <section className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-4 mb-6 text-emerald-600">
+                        <div className="p-3 bg-emerald-50 rounded-2xl">
+                            <Scan size={32} />
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900">Scan Pickup</h2>
                     </div>
-                    <p style={{ marginBottom: '1.5rem', color: '#6b7280', fontSize: '0.9rem' }}>
+                    <p className="mb-6 text-slate-500 text-sm">
                         Masukkan token QR dari petambak saat mengambil barang.
                     </p>
 
-                    <form onSubmit={handleScanPickup}>
+                    <form onSubmit={handleScanPickup} className="space-y-4">
                         <Input
                             label="Token QR Pickup"
                             placeholder="Contoh: abc123-def456"
                             value={qrToken}
                             onChange={(e) => setQrToken(e.target.value)}
                         />
-                        <Button type="submit" style={{ width: '100%' }}>
-                            <Check size={18} /> Konfirmasi Pickup
+                        <Button type="submit" className="w-full">
+                            <Check size={18} className="mr-2" /> Konfirmasi Pickup
                         </Button>
                     </form>
                 </section>
             </div>
 
             {/* Deliveries Section */}
-            <section style={{ marginTop: '2rem' }}>
+            <section className="mt-12">
                 {/* Tab Navigation */}
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', backgroundColor: '#f3f4f6', padding: '0.25rem', borderRadius: '0.75rem', width: 'fit-content' }}>
+                <div className="flex bg-slate-200/50 p-1.5 rounded-2xl mb-8 w-fit shadow-inner">
                     <button
                         onClick={() => setActiveTab('available')}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '0.5rem',
-                            border: 'none',
-                            cursor: 'pointer',
-                            backgroundColor: activeTab === 'available' ? 'white' : 'transparent',
-                            color: activeTab === 'available' ? '#059669' : '#6b7280',
-                            fontWeight: activeTab === 'available' ? 600 : 400,
-                            boxShadow: activeTab === 'available' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                        }}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-bold text-sm ${activeTab === 'available' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-500'}`}
                     >
-                        <Package size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                        Tersedia ({availableDeliveries.length})
+                        <Package size={18} /> Tersedia ({availableDeliveries.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('my')}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '0.5rem',
-                            border: 'none',
-                            cursor: 'pointer',
-                            backgroundColor: activeTab === 'my' ? 'white' : 'transparent',
-                            color: activeTab === 'my' ? '#059669' : '#6b7280',
-                            fontWeight: activeTab === 'my' ? 600 : 400,
-                            boxShadow: activeTab === 'my' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                        }}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-bold text-sm ${activeTab === 'my' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-500'}`}
                     >
-                        <Truck size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                        Pengiriman Saya ({myDeliveries.length})
+                        <Truck size={18} /> Pengiriman Saya ({myDeliveries.length})
                     </button>
                 </div>
 
                 {isLoading ? (
-                    <p style={{ color: '#6b7280' }}>Memuat...</p>
+                    <div className="flex justify-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+                    </div>
                 ) : activeTab === 'available' ? (
                     availableDeliveries.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', backgroundColor: 'white', borderRadius: '1rem' }}>
-                            <Package size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                            <p>Tidak ada pengiriman tersedia</p>
+                        <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Package size={32} className="text-slate-400" />
+                            </div>
+                            <p className="text-slate-500 font-medium">Tidak ada pengiriman tersedia</p>
                         </div>
                     ) : (
-                        <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div className="grid gap-4">
                             {availableDeliveries.map(delivery => (
-                                <div key={delivery.id} style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                                    <div style={{ flex: 1, minWidth: '200px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>Order #{delivery.order_id}</span>
-                                            <span style={{ ...getStatusStyle(delivery.status), fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '1rem', fontWeight: 600 }}>
+                                <div key={delivery.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row justify-between items-center gap-6">
+                                    <div className="flex-1 min-w-[200px]">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="font-bold text-lg text-slate-900">Order #{delivery.order_id}</span>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${getStatusStyle(delivery.status)}`}>
                                                 {delivery.status}
                                             </span>
                                         </div>
                                         {delivery.Order?.OrderItems?.[0]?.UdangProduk?.BatchUdang?.Tambak && (
-                                            <p style={{ fontSize: '0.85rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                <MapPin size={14} /> Dari: {delivery.Order.OrderItems[0].UdangProduk.BatchUdang.Tambak.nama_tambak}
+                                            <p className="text-sm text-slate-500 flex items-center gap-2 mb-1">
+                                                <MapPin size={14} /> Dari: <span className="text-slate-700 font-medium">{delivery.Order.OrderItems[0].UdangProduk.BatchUdang.Tambak.nama_tambak}</span>
                                             </p>
                                         )}
                                         {delivery.Order?.Konsumen && (
-                                            <p style={{ fontSize: '0.85rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                <User size={14} /> Ke: {delivery.Order.Konsumen.name} - {delivery.Order.Konsumen.address}
+                                            <p className="text-sm text-slate-500 flex items-center gap-2">
+                                                <User size={14} /> Ke: <span className="text-slate-700 font-medium">{delivery.Order.Konsumen.name}</span> - {delivery.Order.Konsumen.address}
                                             </p>
                                         )}
                                     </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>{delivery.jarak_km} km</p>
-                                        <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#059669' }}>
+                                    <div className="text-right">
+                                        <p className="text-sm text-slate-400 mb-1">{delivery.jarak_km} km</p>
+                                        <p className="text-xl font-black text-emerald-600">
                                             {formatCurrency(Number(delivery.biaya_logistik))}
                                         </p>
                                     </div>
@@ -204,36 +193,31 @@ const LogistikDashboard = () => {
                     )
                 ) : (
                     myDeliveries.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', backgroundColor: 'white', borderRadius: '1rem' }}>
-                            <Truck size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                            <p>Belum ada pengiriman</p>
+                        <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Truck size={32} className="text-slate-400" />
+                            </div>
+                            <p className="text-slate-500 font-medium">Belum ada pengiriman</p>
                         </div>
                     ) : (
-                        <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div className="grid gap-4">
                             {myDeliveries.map(delivery => (
-                                <div key={delivery.id} style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>Order #{delivery.order_id}</span>
-                                            <span style={{
-                                                backgroundColor: getStatusStyle(delivery.status).bg,
-                                                color: getStatusStyle(delivery.status).color,
-                                                fontSize: '0.7rem',
-                                                padding: '0.2rem 0.5rem',
-                                                borderRadius: '1rem',
-                                                fontWeight: 600
-                                            }}>
+                                <div key={delivery.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row justify-between items-center gap-6">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="font-bold text-lg text-slate-900">Order #{delivery.order_id}</span>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${getStatusStyle(delivery.status)}`}>
                                                 {delivery.status}
                                             </span>
                                         </div>
-                                        <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Jarak: {delivery.jarak_km} km</p>
+                                        <p className="text-sm text-slate-500">Jarak: <span className="font-medium text-slate-700">{delivery.jarak_km} km</span></p>
                                     </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#059669' }}>
+                                    <div className="text-right">
+                                        <p className="text-xl font-black text-emerald-600">
                                             {formatCurrency(Number(delivery.biaya_logistik))}
                                         </p>
                                         {delivery.status === 'PICKED_UP' && (
-                                            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                                            <p className="text-xs text-slate-500 mt-1 italic">
                                                 Berikan QR ke konsumen untuk selesaikan
                                             </p>
                                         )}

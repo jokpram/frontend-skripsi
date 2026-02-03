@@ -1,417 +1,251 @@
-import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import api from '../../services/api';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { Plus, Package, MapPin, Leaf, Droplets, Calendar, Hash, DollarSign, TrendingUp, ShoppingBag, QrCode, Banknote } from 'lucide-react';
-import type { Tambak, BatchUdang, Wallet } from '../../types/models';
+import { Plus, Package, MapPin, DollarSign, ShoppingBag, QrCode, Banknote } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTambaks, useCreateTambak, useCreateBatch } from '../../hooks/api/useTambak';
+import { usePetambakOrders, usePickupQR } from '../../hooks/api/useOrders';
+import { useMyWallet, useRequestWithdraw } from '../../hooks/api/useWallet';
+import type { Tambak, Order } from '../../types/models';
 
 const PetambakDashboard = () => {
-    const [tambaks, setTambaks] = useState<Tambak[]>([]);
-    const [batches, setBatches] = useState<BatchUdang[]>([]);
-    const [orders, setOrders] = useState<any[]>([]);
-    const [wallet, setWallet] = useState<Wallet | null>(null);
+    const tambaksQuery = useTambaks();
+    const walletQuery = useMyWallet();
+    const ordersQuery = usePetambakOrders();
+
+    const tambaks = tambaksQuery.data ?? [];
+    const wallet = walletQuery.data;
+    const orders = ordersQuery.data ?? [];
+
+    const createTambakMutation = useCreateTambak();
+    const createBatchMutation = useCreateBatch();
+    const withdrawMutation = useRequestWithdraw();
+    const qrMutation = usePickupQR();
+
     const [activeTab, setActiveTab] = useState<'tambak' | 'orders'>('tambak');
-
-    const [showTambakModal, setShowTambakModal] = useState(false);
-    const [showBatchModal, setShowBatchModal] = useState(false);
-    const [showProductModal, setShowProductModal] = useState(false);
-    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-    const [showQRModal, setShowQRModal] = useState(false);
-
+    const [modal, setModal] = useState<string | null>(null);
     const [selectedTambakId, setSelectedTambakId] = useState<number | null>(null);
-    const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
     const [qrData, setQrData] = useState<{ token: string; image: string } | null>(null);
 
-    const [newTambak, setNewTambak] = useState({
-        nama_tambak: '',
-        lokasi: '',
-        luas_m2: '',
-        kapasitas_maks_kg: '',
-        latitude: -8.1234,
-        longitude: 114.1234
-    });
+    const [newTambak, setNewTambak] = useState({ nama_tambak: '', lokasi: '', luas_m2: '', kapasitas_maks_kg: '', latitude: -8.1234, longitude: 114.1234 });
+    const [newBatch, setNewBatch] = useState({ tanggal_tebar: '', usia_bibit_hari: 0, asal_bibit: '', kualitas_air_ph: 0, kualitas_air_salinitas: 0, estimasi_panen_kg: 0 });
+    const [withdrawData, setWithdrawData] = useState({ amount: '', bank_account: '' });
 
-    const [newBatch, setNewBatch] = useState({
-        tanggal_tebar: '',
-        usia_bibit_hari: '',
-        asal_bibit: '',
-        kualitas_air_ph: '',
-        kualitas_air_salinitas: '',
-        estimasi_panen_kg: ''
-    });
-
-    const [newProduct, setNewProduct] = useState({
-        jenis_udang: '',
-        grade: 'A',
-        harga_per_kg: '',
-        stok_kg: ''
-    });
-
-    const [withdrawData, setWithdrawData] = useState({
-        amount: '',
-        bank_account: ''
-    });
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            const [tambakRes, batchRes, walletRes, ordersRes] = await Promise.all([
-                api.get('/tambak'),
-                api.get('/tambak/batch'),
-                api.get('/wallet/my').catch(() => ({ data: null })),
-                api.get('/orders/petambak').catch(() => ({ data: [] }))
-            ]);
-            setTambaks(tambakRes.data);
-            setBatches(batchRes.data);
-            setWallet(walletRes.data);
-            setOrders(ordersRes.data);
-        } catch (err: any) {
-            console.error(err);
-        }
-    };
-
-    const handleCreateTambak = async (e: React.FormEvent) => {
+    const handleCreateTambak = async (e: FormEvent) => {
         e.preventDefault();
-        try {
-            const res = await api.post('/tambak', newTambak);
-            setTambaks([...tambaks, res.data]);
-            setShowTambakModal(false);
-            setNewTambak({ nama_tambak: '', lokasi: '', luas_m2: '', kapasitas_maks_kg: '', latitude: -8.1234, longitude: 114.1234 });
-            toast.success('Tambak berhasil dibuat!');
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal membuat tambak');
-        }
+        createTambakMutation.mutate(newTambak, {
+            onSuccess: () => {
+                setModal(null);
+                setNewTambak({ nama_tambak: '', lokasi: '', luas_m2: '', kapasitas_maks_kg: '', latitude: -8.1234, longitude: 114.1234 });
+            }
+        });
     };
 
-    const handleCreateBatch = async (e: React.FormEvent) => {
+    const handleCreateBatch = async (e: FormEvent) => {
         e.preventDefault();
-        try {
-            const payload = { ...newBatch, tambak_id: selectedTambakId };
-            const res = await api.post('/tambak/batch', payload);
-            setBatches([...batches, res.data]);
-            setShowBatchModal(false);
-            setNewBatch({ tanggal_tebar: '', usia_bibit_hari: '', asal_bibit: '', kualitas_air_ph: '', kualitas_air_salinitas: '', estimasi_panen_kg: '' });
-            toast.success('Batch udang berhasil ditambahkan!');
-            fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal membuat batch');
-        }
+        createBatchMutation.mutate({ ...newBatch, tambak_id: selectedTambakId }, {
+            onSuccess: () => {
+                setModal(null);
+                setNewBatch({ tanggal_tebar: '', usia_bibit_hari: 0, asal_bibit: '', kualitas_air_ph: 0, kualitas_air_salinitas: 0, estimasi_panen_kg: 0 });
+            }
+        });
     };
 
-    const handleCreateProduct = async (e: React.FormEvent) => {
+    const handleWithdraw = async (e: FormEvent) => {
         e.preventDefault();
-        try {
-            const payload = { ...newProduct, batch_id: selectedBatchId };
-            await api.post('/products', payload);
-            setShowProductModal(false);
-            setNewProduct({ jenis_udang: '', grade: 'A', harga_per_kg: '', stok_kg: '' });
-            toast.success('Produk berhasil dipublikasikan ke marketplace!');
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal membuat produk');
-        }
+        withdrawMutation.mutate(withdrawData, {
+            onSuccess: () => {
+                setModal(null);
+                setWithdrawData({ amount: '', bank_account: '' });
+            }
+        });
     };
 
-    const handleWithdraw = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await api.post('/wallet/withdraw', withdrawData);
-            setShowWithdrawModal(false);
-            setWithdrawData({ amount: '', bank_account: '' });
-            toast.success('Permintaan penarikan berhasil diajukan!');
-            fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal mengajukan penarikan');
-        }
-    };
-
-    const showPickupQR = async (orderId: number) => {
-        try {
-            const res = await api.get(`/orders/${orderId}/qr`);
-            setQrData({ token: res.data.token, image: res.data.image });
-            setShowQRModal(true);
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal memuat QR');
-        }
-    };
-
-    const openBatchModal = (tambakId: number) => {
-        setSelectedTambakId(tambakId);
-        setShowBatchModal(true);
-    };
-
-    const openProductModal = (batchId: number) => {
-        setSelectedBatchId(batchId);
-        setShowProductModal(true);
+    const showPickupQR = (orderId: number) => {
+        qrMutation.mutate(orderId, {
+            onSuccess: (data) => {
+                setQrData({ token: data.token, image: data.image });
+                setModal('qr');
+            }
+        });
     };
 
     const formatCurrency = (amount: number) => `Rp ${Number(amount).toLocaleString('id-ID')}`;
 
-    const getStatusStyle = (status: string) => {
-        const styles: Record<string, { bg: string; color: string }> = {
-            'PENDING': { bg: '#fef3c7', color: '#92400e' },
-            'PAID': { bg: '#dbeafe', color: '#1e40af' },
-            'SHIPPED': { bg: '#e0e7ff', color: '#3730a3' },
-            'DELIVERED': { bg: '#d1fae5', color: '#065f46' },
-            'COMPLETED': { bg: '#ecfdf5', color: '#059669' },
-        };
-        return styles[status] || { bg: '#f3f4f6', color: '#6b7280' };
-    };
+    if (tambaksQuery.isLoading || walletQuery.isLoading || ordersQuery.isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen bg-slate-50">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600"></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="container" style={{ paddingTop: '6rem', paddingBottom: '3rem' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="container mx-auto px-4 pt-24 pb-12 min-h-screen bg-slate-50">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                 <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#064e3b' }}>Dashboard Petambak</h1>
-                    <p style={{ color: '#6b7280' }}>Kelola tambak, batch, dan penjualan udang Anda</p>
+                    <h1 className="text-4xl font-black text-slate-900 mb-2">My Tambak</h1>
+                    <p className="text-slate-500 text-lg">Kelola ekosistem tambak dan batch udang Anda.</p>
                 </div>
-                <Button onClick={() => setShowTambakModal(true)}>
-                    <Plus size={20} /> Tambah Tambak
+                <Button onClick={() => setModal('tambak')} className="shadow-lg shadow-emerald-500/20">
+                    <Plus size={20} className="mr-2" /> Tambah Tambak
                 </Button>
             </header>
 
             {/* Wallet Card */}
             {wallet && (
-                <section style={{ background: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)', padding: '1.5rem 2rem', borderRadius: '1rem', color: 'white', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <DollarSign size={32} />
-                        <div>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>Saldo Wallet</p>
-                            <p style={{ fontSize: '1.75rem', fontWeight: 800 }}>{formatCurrency(wallet.balance)}</p>
+                <motion.section
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-900 p-8 rounded-3xl text-white mb-10 shadow-xl"
+                >
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                        <div className="flex items-center gap-6">
+                            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-md">
+                                <DollarSign size={40} />
+                            </div>
+                            <div>
+                                <p className="text-emerald-100 font-medium uppercase tracking-widest text-sm mb-1">Saldo Tersedia</p>
+                                <p className="text-4xl font-black">{formatCurrency(wallet.balance)}</p>
+                            </div>
                         </div>
+                        <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-emerald-900" onClick={() => setModal('withdraw')}>
+                            <Banknote size={20} className="mr-2" /> Tarik Saldo
+                        </Button>
                     </div>
-                    <Button variant="outline" style={{ borderColor: 'white', color: 'white' }} onClick={() => setShowWithdrawModal(true)}>
-                        <Banknote size={18} /> Tarik Saldo
-                    </Button>
-                </section>
+                </motion.section>
             )}
 
-            {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', backgroundColor: '#f3f4f6', padding: '0.25rem', borderRadius: '0.75rem', width: 'fit-content' }}>
-                <button onClick={() => setActiveTab('tambak')} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'tambak' ? 'white' : 'transparent', color: activeTab === 'tambak' ? '#059669' : '#6b7280', fontWeight: activeTab === 'tambak' ? 600 : 400, boxShadow: activeTab === 'tambak' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
-                    <Package size={16} style={{ display: 'inline', marginRight: '0.5rem' }} /> Tambak & Batch
+            {/* Tabs */}
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-8 w-fit shadow-inner">
+                <button onClick={() => setActiveTab('tambak')} className={`flex items-center gap-2 px-8 py-3 rounded-xl transition-all duration-200 font-bold ${activeTab === 'tambak' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-500'}`}>
+                    <Package size={18} /> Tambak & Batch
                 </button>
-                <button onClick={() => setActiveTab('orders')} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'orders' ? 'white' : 'transparent', color: activeTab === 'orders' ? '#059669' : '#6b7280', fontWeight: activeTab === 'orders' ? 600 : 400, boxShadow: activeTab === 'orders' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
-                    <ShoppingBag size={16} style={{ display: 'inline', marginRight: '0.5rem' }} /> Pesanan ({orders.length})
+                <button onClick={() => setActiveTab('orders')} className={`flex items-center gap-2 px-8 py-3 rounded-xl transition-all duration-200 font-bold ${activeTab === 'orders' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-500'}`}>
+                    <ShoppingBag size={18} /> Pesanan ({orders.length})
                 </button>
             </div>
 
             {activeTab === 'tambak' ? (
-                <>
-                    {/* Tambak List */}
-                    <section style={{ marginBottom: '3rem' }}>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Daftar Tambak Saya</h2>
-                        {tambaks.length === 0 ? (
-                            <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>Belum ada tambak.</p>
-                        ) : (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-                                {tambaks.map((tambak) => (
-                                    <div key={tambak.id} style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #f3f4f6' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                            <h3 style={{ fontWeight: 700, fontSize: '1.1rem' }}>{tambak.nama_tambak}</h3>
-                                            <span style={{ color: '#059669', backgroundColor: '#ecfdf5', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.7rem', fontWeight: 600 }}>Aktif</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                                            <MapPin size={14} /> {tambak.lokasi}
-                                        </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '1rem' }}>
-                                            <p>Luas: {tambak.luas_m2} m² | Kapasitas: {tambak.kapasitas_maks_kg} kg</p>
-                                            <div style={{ marginTop: '0.5rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', height: '6px', overflow: 'hidden' }}>
-                                                <div style={{ backgroundColor: '#059669', height: '100%', width: `${Math.min((tambak.kapasitas_terpakai_kg / tambak.kapasitas_maks_kg) * 100, 100)}%` }} />
-                                            </div>
-                                            <p style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>{tambak.kapasitas_terpakai_kg}/{tambak.kapasitas_maks_kg} kg terpakai</p>
-                                        </div>
-                                        <Button variant="outline" style={{ width: '100%', fontSize: '0.85rem' }} onClick={() => openBatchModal(tambak.id)}>
-                                            <Plus size={16} /> Tambah Batch Udang
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-
-                    {/* Batch List */}
+                <div className="space-y-12">
                     <section>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Batch Udang Aktif</h2>
-                        {batches.length === 0 ? (
-                            <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>Belum ada batch udang.</p>
-                        ) : (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                                {batches.map((batch) => (
-                                    <div key={batch.id} style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid #e5e7eb' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                                            <span style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <Hash size={14} /> Batch #{batch.id}
-                                            </span>
-                                            <span style={{ fontSize: '0.7rem', backgroundColor: batch.integrity === 'VALID' ? '#ecfdf5' : '#fef2f2', color: batch.integrity === 'VALID' ? '#059669' : '#dc2626', padding: '0.2rem 0.5rem', borderRadius: '0.5rem', fontWeight: 600 }}>
-                                                {batch.integrity || 'VALID'}
-                                            </span>
+                        <h2 className="text-2xl font-bold mb-6 text-slate-800 flex items-center gap-3">
+                            <div className="w-2 h-8 bg-emerald-500 rounded-full" />
+                            Daftar Tambak
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {tambaks.map((tambak: Tambak, i: number) => (
+                                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} key={tambak.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all">
+                                    <div className="flex justify-between mb-4">
+                                        <h3 className="text-xl font-bold text-slate-900">{tambak.nama_tambak}</h3>
+                                        <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">Active</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-500 text-sm mb-6 pb-6 border-b border-slate-50">
+                                        <MapPin size={16} /> {tambak.lokasi}
+                                    </div>
+                                    <div className="space-y-4 mb-8">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">Kapasitas Terpakai</span>
+                                            <span className="font-bold text-slate-700">{Math.round((tambak.kapasitas_terpakai_kg / tambak.kapasitas_maks_kg) * 100)}%</span>
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#6b7280', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                            <p><Calendar size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> {batch.tanggal_tebar}</p>
-                                            <p><Leaf size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> {batch.usia_bibit_hari} hari</p>
-                                            <p><Droplets size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> pH: {batch.kualitas_air_ph}</p>
-                                            <p><TrendingUp size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> {batch.estimasi_panen_kg} kg</p>
+                                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                            <div className="h-full bg-emerald-500 transition-all" style={{ width: `${(tambak.kapasitas_terpakai_kg / tambak.kapasitas_maks_kg) * 100}%` }} />
                                         </div>
-                                        <Button variant="outline" style={{ width: '100%', fontSize: '0.8rem', marginTop: '1rem' }} onClick={() => openProductModal(batch.id)}>
-                                            <Package size={14} /> Jual ke Marketplace
-                                        </Button>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                </>
-            ) : (
-                /* Orders Tab */
-                <section>
-                    {orders.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', backgroundColor: 'white', borderRadius: '1rem' }}>
-                            <ShoppingBag size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                            <p>Belum ada pesanan untuk produk Anda</p>
-                        </div>
-                    ) : (
-                        <div style={{ display: 'grid', gap: '1rem' }}>
-                            {orders.map((order: any) => (
-                                <div key={order.id} style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                        <div>
-                                            <h3 style={{ fontWeight: 700 }}>Order #{order.id}</h3>
-                                            <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>Pembeli: {order.Konsumen?.name}</p>
-                                        </div>
-                                        <span style={{ backgroundColor: getStatusStyle(order.status).bg, color: getStatusStyle(order.status).color, padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
-                                            {order.status}
-                                        </span>
-                                    </div>
-                                    <div style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
-                                        {order.items?.map((item: any, idx: number) => (
-                                            <p key={idx} style={{ color: '#4b5563' }}>
-                                                • {item.UdangProduk?.jenis_udang} - {item.qty_kg} kg @ {formatCurrency(item.harga_per_kg)}
-                                            </p>
-                                        ))}
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
-                                        <span style={{ fontWeight: 600 }}>Total: {formatCurrency(Number(order.total_harga))}</span>
-                                        {order.status === 'PAID' && order.Delivery && (
-                                            <Button onClick={() => showPickupQR(order.id)} style={{ fontSize: '0.85rem' }}>
-                                                <QrCode size={16} /> Tampilkan QR Pickup
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
+                                    <Button variant="outline" className="w-full rounded-2xl" onClick={() => { setSelectedTambakId(tambak.id); setModal('batch'); }}>
+                                        <Plus size={18} className="mr-2" /> Add Batch
+                                    </Button>
+                                </motion.div>
                             ))}
                         </div>
-                    )}
+                    </section>
+                </div>
+            ) : (
+                /* Orders Section */
+                <section>
+                    <div className="grid gap-6">
+                        {orders.map((order: Order, i: number) => (
+                            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} key={order.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between gap-8">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <h3 className="text-2xl font-black text-slate-900">Order #{order.id}</h3>
+                                        <span className="bg-blue-50 text-blue-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">{order.status}</span>
+                                    </div>
+                                    <p className="text-slate-400 text-sm italic">Pembeli: {order.Konsumen?.name}</p>
+                                </div>
+                                <div className="flex flex-col justify-between items-end gap-6 border-l border-slate-50 pl-8">
+                                    <Button onClick={() => showPickupQR(order.id)} disabled={qrMutation.isPending}>
+                                        <QrCode size={18} className="mr-2" /> {qrMutation.isPending ? 'Loading...' : 'QR Pickup'}
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
                 </section>
             )}
 
-            {/* Create Tambak Modal */}
-            {showTambakModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-                    <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Tambah Tambak Baru</h2>
-                        <form onSubmit={handleCreateTambak}>
-                            <Input label="Nama Tambak" placeholder="Tambak Sejahtera" value={newTambak.nama_tambak} onChange={(e) => setNewTambak({ ...newTambak, nama_tambak: e.target.value })} required />
-                            <Input label="Lokasi" placeholder="Banyuwangi, Blok A" value={newTambak.lokasi} onChange={(e) => setNewTambak({ ...newTambak, lokasi: e.target.value })} required />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <Input label="Luas (m²)" type="number" placeholder="1000" value={newTambak.luas_m2} onChange={(e) => setNewTambak({ ...newTambak, luas_m2: e.target.value })} required />
-                                <Input label="Kapasitas (kg)" type="number" placeholder="5000" value={newTambak.kapasitas_maks_kg} onChange={(e) => setNewTambak({ ...newTambak, kapasitas_maks_kg: e.target.value })} required />
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                                <Button type="button" variant="outline" onClick={() => setShowTambakModal(false)} style={{ flex: 1 }}>Batal</Button>
-                                <Button type="submit" style={{ flex: 1 }}>Simpan</Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Modals */}
+            <AnimatePresence>
+                {modal && (
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center px-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setModal(null)} />
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white p-8 rounded-[2rem] w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
+                            <h2 className="text-3xl font-black text-slate-900 mb-8 border-b border-slate-100 pb-4">{modal.toUpperCase()}</h2>
 
-            {/* Create Batch Modal */}
-            {showBatchModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-                    <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Tambah Batch Udang</h2>
-                        <form onSubmit={handleCreateBatch}>
-                            <Input label="Tanggal Tebar" type="date" value={newBatch.tanggal_tebar} onChange={(e) => setNewBatch({ ...newBatch, tanggal_tebar: e.target.value })} required />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <Input label="Usia Bibit (hari)" type="number" placeholder="15" value={newBatch.usia_bibit_hari} onChange={(e) => setNewBatch({ ...newBatch, usia_bibit_hari: e.target.value })} required />
-                                <Input label="Asal Bibit" placeholder="Hatchery XYZ" value={newBatch.asal_bibit} onChange={(e) => setNewBatch({ ...newBatch, asal_bibit: e.target.value })} required />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <Input label="pH Air" type="number" step="0.1" placeholder="7.5" value={newBatch.kualitas_air_ph} onChange={(e) => setNewBatch({ ...newBatch, kualitas_air_ph: e.target.value })} required />
-                                <Input label="Salinitas (ppt)" type="number" step="0.1" placeholder="25" value={newBatch.kualitas_air_salinitas} onChange={(e) => setNewBatch({ ...newBatch, kualitas_air_salinitas: e.target.value })} required />
-                            </div>
-                            <Input label="Estimasi Panen (kg)" type="number" placeholder="1000" value={newBatch.estimasi_panen_kg} onChange={(e) => setNewBatch({ ...newBatch, estimasi_panen_kg: e.target.value })} required />
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                                <Button type="button" variant="outline" onClick={() => setShowBatchModal(false)} style={{ flex: 1 }}>Batal</Button>
-                                <Button type="submit" style={{ flex: 1 }}>Simpan</Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                            {modal === 'tambak' && (
+                                <form onSubmit={handleCreateTambak} className="space-y-4">
+                                    <Input label="Nama Tambak" placeholder="Tambak A" value={newTambak.nama_tambak} onChange={(e) => setNewTambak({ ...newTambak, nama_tambak: e.target.value })} required />
+                                    <Input label="Lokasi" placeholder="Banyuwangi" value={newTambak.lokasi} onChange={(e) => setNewTambak({ ...newTambak, lokasi: e.target.value })} required />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Input name="luas_m2" label="Luas (m²)" type="number" value={newTambak.luas_m2} onChange={(e) => setNewTambak({ ...newTambak, luas_m2: e.target.value })} required />
+                                        <Input name="kapasitas_maks_kg" label="Kapasitas (kg)" type="number" value={newTambak.kapasitas_maks_kg} onChange={(e) => setNewTambak({ ...newTambak, kapasitas_maks_kg: e.target.value })} required />
+                                    </div>
+                                    <Button type="submit" className="w-full" disabled={createTambakMutation.isPending}>
+                                        {createTambakMutation.isPending ? 'Simpan...' : 'Simpan Tambak'}
+                                    </Button>
+                                </form>
+                            )}
 
-            {/* Create Product Modal */}
-            {showProductModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-                    <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '500px' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Jual Produk ke Marketplace</h2>
-                        <form onSubmit={handleCreateProduct}>
-                            <Input label="Jenis Udang" placeholder="Udang Vaname" value={newProduct.jenis_udang} onChange={(e) => setNewProduct({ ...newProduct, jenis_udang: e.target.value })} required />
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.9rem' }}>Grade</label>
-                                <select value={newProduct.grade} onChange={(e) => setNewProduct({ ...newProduct, grade: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', fontSize: '0.95rem' }}>
-                                    <option value="A">Grade A (Premium)</option>
-                                    <option value="B">Grade B (Standard)</option>
-                                    <option value="C">Grade C (Economy)</option>
-                                </select>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <Input label="Harga per kg (Rp)" type="number" placeholder="85000" value={newProduct.harga_per_kg} onChange={(e) => setNewProduct({ ...newProduct, harga_per_kg: e.target.value })} required />
-                                <Input label="Stok (kg)" type="number" placeholder="100" value={newProduct.stok_kg} onChange={(e) => setNewProduct({ ...newProduct, stok_kg: e.target.value })} required />
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                                <Button type="button" variant="outline" onClick={() => setShowProductModal(false)} style={{ flex: 1 }}>Batal</Button>
-                                <Button type="submit" style={{ flex: 1 }}>Publikasikan</Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                            {modal === 'batch' && (
+                                <form onSubmit={handleCreateBatch} className="space-y-4">
+                                    <Input label="Tanggal Tebar" type="date" value={newBatch.tanggal_tebar} onChange={(e) => setNewBatch({ ...newBatch, tanggal_tebar: e.target.value })} required />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Input name="usia_bibit_hari" label="Usia Bibit (hari)" type="number" value={newBatch.usia_bibit_hari} onChange={(e) => setNewBatch({ ...newBatch, usia_bibit_hari: parseInt(e.target.value) || 0 })} required />
+                                        <Input label="Asal Bibit" placeholder="Hatchery A" value={newBatch.asal_bibit} onChange={(e) => setNewBatch({ ...newBatch, asal_bibit: e.target.value })} required />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Input name="kualitas_air_ph" label="pH Air" type="number" step="0.1" value={newBatch.kualitas_air_ph} onChange={(e) => setNewBatch({ ...newBatch, kualitas_air_ph: parseFloat(e.target.value) || 0 })} required />
+                                        <Input name="kualitas_air_salinitas" label="Salinitas (ppt)" type="number" step="0.1" value={newBatch.kualitas_air_salinitas} onChange={(e) => setNewBatch({ ...newBatch, kualitas_air_salinitas: parseFloat(e.target.value) || 0 })} required />
+                                    </div>
+                                    <Input name="estimasi_panen_kg" label="Estimasi Panen (kg)" type="number" value={newBatch.estimasi_panen_kg} onChange={(e) => setNewBatch({ ...newBatch, estimasi_panen_kg: parseInt(e.target.value) || 0 })} required />
+                                    <Button type="submit" className="w-full" disabled={createBatchMutation.isPending}>
+                                        {createBatchMutation.isPending ? 'Simpan...' : 'Simpan Batch'}
+                                    </Button>
+                                </form>
+                            )}
 
-            {/* Withdraw Modal */}
-            {showWithdrawModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-                    <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '400px' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Tarik Saldo</h2>
-                        <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>Saldo tersedia: {wallet ? formatCurrency(wallet.balance) : 'Rp 0'}</p>
-                        <form onSubmit={handleWithdraw}>
-                            <Input label="Jumlah Penarikan (Rp)" type="number" placeholder="100000" value={withdrawData.amount} onChange={(e) => setWithdrawData({ ...withdrawData, amount: e.target.value })} required />
-                            <Input label="Nomor Rekening" placeholder="BCA - 1234567890" value={withdrawData.bank_account} onChange={(e) => setWithdrawData({ ...withdrawData, bank_account: e.target.value })} required />
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                                <Button type="button" variant="outline" onClick={() => setShowWithdrawModal(false)} style={{ flex: 1 }}>Batal</Button>
-                                <Button type="submit" style={{ flex: 1 }}>Ajukan</Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                            {modal === 'withdraw' && (
+                                <form onSubmit={handleWithdraw} className="space-y-4">
+                                    <Input label="Jumlah Penarikan (Rp)" type="number" value={withdrawData.amount} onChange={(e) => setWithdrawData({ ...withdrawData, amount: e.target.value })} required />
+                                    <Input label="Nomor Rekening" placeholder="BCA - 12345678" value={withdrawData.bank_account} onChange={(e) => setWithdrawData({ ...withdrawData, bank_account: e.target.value })} required />
+                                    <Button type="submit" className="w-full" disabled={withdrawMutation.isPending}>
+                                        {withdrawMutation.isPending ? 'Ajukan...' : 'Ajukan Penarikan'}
+                                    </Button>
+                                </form>
+                            )}
 
-            {/* QR Modal */}
-            {showQRModal && qrData && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-                    <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '400px', textAlign: 'center' }}>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>QR Code Pickup</h2>
-                        <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Tunjukkan QR ini kepada kurir saat pickup</p>
-                        <img src={qrData.image} alt="QR Code" style={{ width: '200px', height: '200px', margin: '0 auto 1rem' }} />
-                        <p style={{ fontSize: '0.8rem', color: '#6b7280', wordBreak: 'break-all' }}>Token: {qrData.token}</p>
-                        <Button onClick={() => setShowQRModal(false)} style={{ marginTop: '1.5rem', width: '100%' }}>Tutup</Button>
+                            {modal === 'qr' && qrData && (
+                                <div className="text-center space-y-6">
+                                    <img src={qrData.image} alt="QR" className="w-64 h-64 mx-auto" />
+                                    <p className="text-sm font-mono text-slate-400 break-all">{qrData.token}</p>
+                                    <Button onClick={() => setModal(null)} className="w-full">Tanda Selesai</Button>
+                                </div>
+                            )}
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </div>
     );
 };

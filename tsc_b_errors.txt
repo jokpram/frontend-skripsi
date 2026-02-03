@@ -1,0 +1,19 @@
+(node:16100) ExperimentalWarning: CommonJS module C:\Users\ASUS\AppData\Roaming\npm\node_modules\npm\node_modules\debug\src\node.js is loading ES Module C:\Users\ASUS\AppData\Roaming\npm\node_modules\npm\node_modules\supports-color\index.js using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+src/components/common/Button.test.tsx(1,18): error TS2305: Module '"@testing-library/react"' has no exported member 'screen'.
+src/components/common/Button.test.tsx(1,26): error TS2305: Module '"@testing-library/react"' has no exported member 'fireEvent'.
+src/components/common/Input.test.tsx(1,18): error TS2305: Module '"@testing-library/react"' has no exported member 'screen'.
+src/components/common/Input.test.tsx(1,26): error TS2305: Module '"@testing-library/react"' has no exported member 'fireEvent'.
+src/pages/auth/LoginPage.test.tsx(1,18): error TS2305: Module '"@testing-library/react"' has no exported member 'screen'.
+src/pages/auth/LoginPage.test.tsx(1,26): error TS2305: Module '"@testing-library/react"' has no exported member 'fireEvent'.
+src/pages/auth/LoginPage.test.tsx(1,37): error TS2305: Module '"@testing-library/react"' has no exported member 'waitFor'.
+src/pages/auth/RegisterPage.test.tsx(1,18): error TS2305: Module '"@testing-library/react"' has no exported member 'screen'.
+src/pages/auth/RegisterPage.test.tsx(1,26): error TS2305: Module '"@testing-library/react"' has no exported member 'fireEvent'.
+src/pages/auth/RegisterPage.test.tsx(1,37): error TS2305: Module '"@testing-library/react"' has no exported member 'waitFor'.
+src/pages/dashboard/AdminDashboard.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/pages/dashboard/LogistikDashboard.tsx(6,59): error TS6133: 'ArrowRight' is declared but its value is never read.
+src/pages/dashboard/PetambakDashboard.test.tsx(1,18): error TS2305: Module '"@testing-library/react"' has no exported member 'screen'.
+src/pages/dashboard/PetambakDashboard.test.tsx(1,26): error TS2305: Module '"@testing-library/react"' has no exported member 'fireEvent'.
+src/pages/dashboard/PetambakDashboard.test.tsx(1,37): error TS2305: Module '"@testing-library/react"' has no exported member 'waitFor'.
+src/pages/dashboard/PetambakDashboard.tsx(2,1): error TS6133: 'FormEvent' is declared but its value is never read.
