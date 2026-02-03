@@ -1,29 +1,85 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
+import api from '../../services/api';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { motion } from 'framer-motion';
-import { CheckCircle, Truck, Package, MapPin } from 'lucide-react';
+import { CheckCircle, Package, MapPin, Droplets, Calendar, Shield, AlertTriangle } from 'lucide-react';
+import type { BatchUdang } from '../../types/models';
+
+interface TraceResult {
+    batch: BatchUdang;
+    tambak: {
+        nama_tambak: string;
+        lokasi: string;
+        petambak_name: string;
+    };
+    journey: {
+        stage: string;
+        date: string;
+        location: string;
+        icon: any;
+    }[];
+    integrity: 'VALID' | 'DATA TAMPERED';
+}
 
 const TraceabilityPage = () => {
     const [batchId, setBatchId] = useState('');
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<TraceResult | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSearch = (e: React.FormEvent) => {
+    const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulation of data
-        if (batchId) {
+        if (!batchId.trim()) {
+            toast.error('Masukkan Batch ID');
+            return;
+        }
+
+        setIsLoading(true);
+        setError('');
+        setResult(null);
+
+        try {
+            const res = await api.get(`/products/trace/${batchId}`);
+            const data = res.data;
+
+            // Build journey from batch data
+            const journey = [
+                {
+                    stage: 'Bibit Ditebar',
+                    date: data.batch.tanggal_tebar,
+                    location: data.tambak.lokasi,
+                    icon: Package
+                },
+                {
+                    stage: 'Pemeliharaan',
+                    date: `pH: ${data.batch.kualitas_air_ph}, Salinitas: ${data.batch.kualitas_air_salinitas}`,
+                    location: data.tambak.nama_tambak,
+                    icon: Droplets
+                }
+            ];
+
+            if (data.batch.tanggal_panen) {
+                journey.push({
+                    stage: 'Panen',
+                    date: data.batch.tanggal_panen,
+                    location: data.tambak.lokasi,
+                    icon: CheckCircle
+                });
+            }
+
             setResult({
-                id: batchId,
-                origin: 'Tambak Udang Makmur, Banyuwangi',
-                harvestDate: '2023-10-15',
-                status: 'Delivered',
-                journey: [
-                    { stage: 'Harvested', date: '2023-10-15 08:00', location: 'Banyuwangi', icon: Package },
-                    { stage: 'Quality Check', date: '2023-10-15 10:00', location: 'Banyuwangi QC Center', icon: CheckCircle },
-                    { stage: 'In Transit', date: '2023-10-16 14:00', location: 'Logistik Pantura', icon: Truck },
-                    { stage: 'Delivered', date: '2023-10-17 09:30', location: 'Jakarta', icon: MapPin },
-                ]
+                batch: data.batch,
+                tambak: data.tambak,
+                journey,
+                integrity: data.integrity
             });
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Batch tidak ditemukan');
+            toast.error('Batch tidak ditemukan');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -53,7 +109,7 @@ const TraceabilityPage = () => {
                     transition={{ delay: 0.2 }}
                     style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: '600px', margin: '0 auto' }}
                 >
-                    Transparansi penuh dari tambak ke tangan anda. Masukkan Batch ID untuk memulai.
+                    Transparansi penuh dari tambak ke tangan Anda. Masukkan Batch ID untuk memulai.
                 </motion.p>
             </div>
 
@@ -77,14 +133,18 @@ const TraceabilityPage = () => {
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <Input
                                 label=""
-                                placeholder="Contoh: B-202310-001"
+                                placeholder="Contoh: 1, 2, 3..."
                                 value={batchId}
                                 onChange={(e) => setBatchId(e.target.value)}
                                 style={{ marginBottom: 0, flex: 1 }}
-                                className="search-input" // Requires global css or inline style override for height if needed
                             />
-                            <Button type="submit" style={{ padding: '0 2rem' }}>Lacak</Button>
+                            <Button type="submit" style={{ padding: '0 2rem' }} disabled={isLoading}>
+                                {isLoading ? 'Mencari...' : 'Lacak'}
+                            </Button>
                         </div>
+                        {error && (
+                            <p style={{ color: '#dc2626', fontSize: '0.9rem', marginTop: '0.5rem' }}>{error}</p>
+                        )}
                     </form>
                 </motion.div>
 
@@ -95,6 +155,36 @@ const TraceabilityPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ type: "spring", stiffness: 50 }}
                     >
+                        {/* Integrity Badge */}
+                        <div style={{
+                            backgroundColor: result.integrity === 'VALID' ? '#ecfdf5' : '#fef2f2',
+                            border: `2px solid ${result.integrity === 'VALID' ? '#10b981' : '#ef4444'}`,
+                            borderRadius: '1rem',
+                            padding: '1rem 1.5rem',
+                            marginBottom: '2rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '1rem'
+                        }}>
+                            {result.integrity === 'VALID' ? (
+                                <>
+                                    <Shield size={32} style={{ color: '#10b981' }} />
+                                    <div>
+                                        <p style={{ fontWeight: 700, color: '#065f46' }}>Data Terverifikasi</p>
+                                        <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Integritas data terjamin oleh blockchain hash</p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <AlertTriangle size={32} style={{ color: '#ef4444' }} />
+                                    <div>
+                                        <p style={{ fontWeight: 700, color: '#991b1b' }}>Peringatan: Data Tidak Valid</p>
+                                        <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Terdeteksi perubahan data yang tidak sah</p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
                         {/* Product Summary Card */}
                         <div style={{
                             backgroundColor: 'white',
@@ -102,18 +192,16 @@ const TraceabilityPage = () => {
                             overflow: 'hidden',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                             marginBottom: '2rem',
-                            display: 'flex',
-                            flexDirection: 'column',
                             border: '1px solid #e5e7eb'
                         }}>
                             <div style={{ backgroundColor: '#ecfdf5', padding: '1.5rem', borderBottom: '1px solid #d1fae5' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
-                                        <p style={{ fontSize: '0.875rem', color: '#059669', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Batch Code</p>
-                                        <h2 style={{ fontSize: '1.875rem', fontWeight: 800, color: '#064e3b' }}>{result.id}</h2>
+                                        <p style={{ fontSize: '0.875rem', color: '#059669', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Batch ID</p>
+                                        <h2 style={{ fontSize: '1.875rem', fontWeight: 800, color: '#064e3b' }}>#{result.batch.id}</h2>
                                     </div>
                                     <div style={{ backgroundColor: '#10B981', color: 'white', padding: '0.5rem 1rem', borderRadius: '2rem', fontWeight: 600, fontSize: '0.875rem' }}>
-                                        {result.status}
+                                        {result.batch.tanggal_panen ? 'Sudah Panen' : 'Dalam Budidaya'}
                                     </div>
                                 </div>
                             </div>
@@ -125,7 +213,26 @@ const TraceabilityPage = () => {
                                     </div>
                                     <div>
                                         <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Asal Tambak</p>
-                                        <p style={{ fontWeight: 600, color: '#1f2937', fontSize: '1.1rem' }}>{result.origin}</p>
+                                        <p style={{ fontWeight: 600, color: '#1f2937', fontSize: '1rem' }}>{result.tambak.nama_tambak}</p>
+                                        <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>{result.tambak.lokasi}</p>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                                    <div style={{ padding: '0.75rem', backgroundColor: '#f3f4f6', borderRadius: '1rem', color: '#4b5563' }}>
+                                        <Calendar size={24} />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tanggal Tebar</p>
+                                        <p style={{ fontWeight: 600, color: '#1f2937', fontSize: '1rem' }}>{new Date(result.batch.tanggal_tebar).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                                    <div style={{ padding: '0.75rem', backgroundColor: '#f3f4f6', borderRadius: '1rem', color: '#4b5563' }}>
+                                        <Droplets size={24} />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Kualitas Air</p>
+                                        <p style={{ fontWeight: 600, color: '#1f2937', fontSize: '1rem' }}>pH: {result.batch.kualitas_air_ph} | Salinitas: {result.batch.kualitas_air_salinitas}</p>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
@@ -133,11 +240,19 @@ const TraceabilityPage = () => {
                                         <Package size={24} />
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tanggal Panen</p>
-                                        <p style={{ fontWeight: 600, color: '#1f2937', fontSize: '1.1rem' }}>{new Date(result.harvestDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Estimasi Panen</p>
+                                        <p style={{ fontWeight: 600, color: '#1f2937', fontSize: '1rem' }}>{result.batch.estimasi_panen_kg} kg</p>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Blockchain Hash */}
+                            {result.batch.blockchain_hash && (
+                                <div style={{ padding: '1rem 2rem', backgroundColor: '#f9fafb', borderTop: '1px solid #e5e7eb' }}>
+                                    <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Blockchain Hash (SHA-256)</p>
+                                    <p style={{ fontSize: '0.7rem', color: '#9ca3af', fontFamily: 'monospace', wordBreak: 'break-all' }}>{result.batch.blockchain_hash}</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Timeline */}
@@ -155,7 +270,7 @@ const TraceabilityPage = () => {
                                 zIndex: 0
                             }} />
 
-                            {result.journey.map((step: any, idx: number) => (
+                            {result.journey.map((step, idx) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, x: -20 }}
@@ -176,7 +291,7 @@ const TraceabilityPage = () => {
                                         height: '3rem',
                                         borderRadius: '50%',
                                         backgroundColor: idx === result.journey.length - 1 ? '#10B981' : 'white',
-                                        border: `2px solid ${idx === result.journey.length - 1 ? '#10B981' : '#10B981'}`,
+                                        border: '2px solid #10B981',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',

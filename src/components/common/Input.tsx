@@ -10,10 +10,14 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const Input: React.FC<InputProps> = ({ label, error, className, style, ...props }) => {
     return (
         <div style={{ marginBottom: '1rem', width: '100%' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--color-text-main)' }}>
+            <label
+                htmlFor={props.id || label}
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--color-text-main)' }}
+            >
                 {label}
             </label>
             <input
+                id={props.id || label}
                 className={clsx(className)}
                 style={{
                     width: '100%',

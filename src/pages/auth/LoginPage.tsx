@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { login } from '../../services/authService';
 import { Button } from '../../components/common/Button';
@@ -30,10 +31,13 @@ const LoginPage = () => {
 
         try {
             const data = await login(role, formData);
-            authLogin(data.token, data); // API response now has role included per previous step
+            authLogin(data.token, data);
+            toast.success(`Selamat datang kembali, ${data.name}!`);
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Login failed');
+            const msg = err.response?.data?.message || 'Login failed';
+            setError(msg);
+            toast.error(msg);
         } finally {
             setIsLoading(false);
         }

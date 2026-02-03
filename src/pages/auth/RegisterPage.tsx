@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { register } from '../../services/authService';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -57,10 +58,8 @@ const RegisterPage = () => {
             }
 
             await register(role, payload);
-            // Redirect to login with success message usually, or auto login. 
-            // Verification system is in place: "Pending Verification"
+            toast.success('Registrasi berhasil! Silahkan masuk setelah akun diverifikasi admin.');
             navigate('/login');
-            alert('Registrasi berhasil! Silahkan masuk setelah akun diverifikasi admin.');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Registrasi gagal');
         } finally {
