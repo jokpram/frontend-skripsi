@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import api from '../../services/api';
+import { getProducts } from '../../services/productService';
+import { getMyOrders, createOrder, getPaymentToken, scanReceive } from '../../services/orderService';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { ShoppingCart, Package, Search, Truck, CreditCard, Check, QrCode } from 'lucide-react';
@@ -24,11 +25,11 @@ const KonsumenDashboard = () => {
         setIsLoading(true);
         try {
             const [productsRes, ordersRes] = await Promise.all([
-                api.get('/products'),
-                api.get('/orders/my')
+                getProducts(),
+                getMyOrders()
             ]);
-            setProducts(productsRes.data);
-            setOrders(ordersRes.data);
+            setProducts(productsRes);
+            setOrders(ordersRes);
         } catch (err) {
             console.error(err);
         } finally {
@@ -65,21 +66,21 @@ const KonsumenDashboard = () => {
             return;
         }
         try {
-            const items = cart.map(c => ({ produk_id: c.produk_id, qty: c.qty }));
-            const res = await api.post('/orders', { items });
-            toast.success(`Order #${res.data.order.id} berhasil dibuat!`);
+            const items = cart.map(c => ({ produk_id: c.produk_id, qty_kg: c.qty }));
+            const res = await createOrder({ items });
+            toast.success(`Order #${res.order.id} berhasil dibuat!`);
             setCart([]);
 
             // Get payment token
-            const paymentRes = await api.post('/orders/payment/token', { orderId: res.data.order.id });
-            if (paymentRes.data.redirect_url) {
-                window.open(paymentRes.data.redirect_url, '_blank');
+            const paymentRes = await getPaymentToken(res.order.id);
+            if (paymentRes.redirect_url) {
+                window.open(paymentRes.redirect_url, '_blank');
             }
 
             fetchData();
             setActiveTab('orders');
         } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal membuat order');
+            toast.error(err || 'Gagal membuat order');
         }
     };
 
@@ -89,13 +90,13 @@ const KonsumenDashboard = () => {
             return;
         }
         try {
-            await api.post('/orders/scan/receive', { qr_token: qrToken });
+            await scanReceive(qrToken);
             toast.success('Pesanan dikonfirmasi diterima!');
             setShowQRModal(false);
             setQrToken('');
             fetchData();
         } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal konfirmasi');
+            toast.error(err || 'Gagal konfirmasi');
         }
     };
 

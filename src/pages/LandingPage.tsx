@@ -18,7 +18,7 @@ const LandingPage = () => {
                         transition={{ duration: 0.8 }}
                     >
                         <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-emerald-300 text-sm font-bold tracking-wider mb-6">
-                            REVOLUSI INDUSTRI UDANG 4.0
+                            REVOLUSI INDUSTRI UDANG INDONESIA
                         </span>
                         <h1 className="text-5xl lg:text-7xl font-black text-white mb-8 leading-tight tracking-tight">
                             Traceability Udang <br />
@@ -64,17 +64,17 @@ const LandingPage = () => {
                     <div className="p-8 text-center">
                         <div className="flex items-center justify-center gap-3 mb-2 text-emerald-600">
                             <Users size={24} />
-                            <span className="font-bold text-slate-500 uppercase tracking-wider text-sm">Active Users</span>
+                            <span className="font-bold text-slate-500 uppercase tracking-wider text-sm">Petambak & Mitra</span>
                         </div>
-                        <p className="text-4xl font-black text-slate-900">500+</p>
-                        <p className="text-slate-400 text-sm mt-1">Petambak & Mitra</p>
+                        <p className="text-4xl font-black text-slate-900">Indonesia</p>
+                        <p className="text-slate-400 text-sm mt-1">Telah Bergabung</p>
                     </div>
                     <div className="p-8 text-center">
                         <div className="flex items-center justify-center gap-3 mb-2 text-emerald-600">
                             <Globe size={24} />
-                            <span className="font-bold text-slate-500 uppercase tracking-wider text-sm">Coverage</span>
+                            <span className="font-bold text-slate-500 uppercase tracking-wider text-sm">Jangkauan</span>
                         </div>
-                        <p className="text-4xl font-black text-slate-900">34</p>
+                        <p className="text-4xl font-black text-slate-900">38</p>
                         <p className="text-slate-400 text-sm mt-1">Provinsi Indonesia</p>
                     </div>
                 </div>
@@ -84,7 +84,7 @@ const LandingPage = () => {
             <section className="container mx-auto px-4 py-32">
                 <div className="text-center mb-20">
                     <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">Kenapa Memilih <span className="text-emerald-600">CRONOS</span>?</h2>
-                    <p className="text-slate-500 text-lg max-w-2xl mx-auto">Kami menggabungkan teknologi IoT dan Blockchain untuk memastikan setiap udang yang Anda beli memiliki kualitas terbaik.</p>
+                    <p className="text-slate-500 text-lg max-w-2xl mx-auto">Kami menggunakan teknologi Blockchain untuk memastikan setiap udang yang Anda beli memiliki kualitas terbaik.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

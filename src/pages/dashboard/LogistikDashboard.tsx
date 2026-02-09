@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import toast from 'react-hot-toast';
-import api from '../../services/api';
+import { getMyWallet } from '../../services/walletService';
+import { getAvailableDeliveries, getMyDeliveries, scanPickup } from '../../services/orderService';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Scan, Truck, MapPin, Check, Package, DollarSign, User } from 'lucide-react';
@@ -23,13 +24,13 @@ const LogistikDashboard = () => {
         setIsLoading(true);
         try {
             const [walletRes, availableRes, myRes] = await Promise.all([
-                api.get('/wallet/my'),
-                api.get('/orders/deliveries/available'),
-                api.get('/orders/deliveries/my')
+                getMyWallet(),
+                getAvailableDeliveries(),
+                getMyDeliveries()
             ]);
-            setWallet(walletRes.data);
-            setAvailableDeliveries(availableRes.data);
-            setMyDeliveries(myRes.data);
+            setWallet(walletRes);
+            setAvailableDeliveries(availableRes);
+            setMyDeliveries(myRes);
         } catch (err) {
             console.error(err);
         } finally {
@@ -44,12 +45,12 @@ const LogistikDashboard = () => {
             return;
         }
         try {
-            await api.post('/orders/scan/pickup', { qr_token: qrToken });
+            await scanPickup(qrToken);
             toast.success('Pickup berhasil! Pengiriman dimulai.');
             setQrToken('');
             fetchData();
         } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Gagal scan pickup');
+            toast.error(err || 'Gagal scan pickup');
         }
     };
 

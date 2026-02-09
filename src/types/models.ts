@@ -139,7 +139,7 @@ export interface WalletTransaction {
     wallet_id: number;
     type: 'CREDIT' | 'DEBIT';
     amount: number;
-    source: 'ORDER' | 'LOGISTIC_FEE' | 'ADMIN_FEE' | 'WITHDRAWAL' | 'ORDER_RELEASE' | 'WITHDRAW_REFUND';
+    source: 'ORDER' | 'LOGISTIC_FEE' | 'ADMIN_FEE' | 'WITHDRAWAL';
     reference_id?: string;
     created_at?: string;
 }
@@ -157,10 +157,10 @@ export interface WithdrawRequest {
 export interface PaymentLog {
     id: number;
     order_id: number;
-    midtrans_order_id: string;
+    midtrans_order_id?: string;
     payment_type?: string;
-    transaction_status: string;
-    gross_amount: number;
+    transaction_status?: string;
+    gross_amount?: number;
     paid_at?: string;
     raw_callback_json?: string;
 }

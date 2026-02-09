@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -14,8 +15,39 @@ export const Navbar = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        dispatch(logout());
-        navigate('/login');
+        toast((t) => (
+            <div className="flex flex-col gap-3 min-w-[200px]">
+                <span className="font-bold text-slate-800 text-center">Yakin ingin keluar?</span>
+                <div className="flex gap-2 justify-center w-full">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="flex-1 px-3 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        onClick={() => {
+                            dispatch(logout());
+                            navigate('/login');
+                            toast.dismiss(t.id);
+                            toast.success('Sampai jumpa lagi!', { icon: '👋' });
+                        }}
+                        className="flex-1 px-3 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors shadow-lg shadow-red-500/20"
+                    >
+                        Ya, Keluar
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: Infinity,
+            position: 'top-center',
+            style: {
+                borderRadius: '1.5rem',
+                padding: '1.5rem',
+                border: '1px solid #f1f5f9',
+                boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+            },
+        });
     };
 
     return (

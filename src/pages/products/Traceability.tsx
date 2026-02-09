@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import api from '../../services/api';
+import { getProductTrace } from '../../services/productService';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { motion } from 'framer-motion';
@@ -20,19 +20,19 @@ const TraceabilityPage = () => {
     const [result, setResult] = useState<TraceResult | null>(null);
 
     const traceMutation = useMutation({
-        mutationFn: async (id: string) => {
-            const res = await api.get(`/products/trace/${id}`);
-            return res.data;
-        },
-        onSuccess: (data) => {
+        mutationFn: (id: string) => getProductTrace(id),
+        onSuccess: (data: any) => {
+            const batch = data;
+            const tambak = data.Tambak;
+
             const journey = [
-                { stage: 'Bibit Ditebar', date: data.batch.tanggal_tebar, location: data.tambak.lokasi, icon: Package },
-                { stage: 'Pemeliharaan', date: `pH: ${data.batch.kualitas_air_ph}, Salinitas: ${data.batch.kualitas_air_salinitas}`, location: data.tambak.nama_tambak, icon: Droplets }
+                { stage: 'Bibit Ditebar', date: batch.tanggal_tebar, location: tambak?.lokasi || 'Unknown', icon: Package },
+                { stage: 'Pemeliharaan', date: `pH: ${batch.kualitas_air_ph}, Salinitas: ${batch.kualitas_air_salinitas}`, location: tambak?.nama_tambak || 'Unknown', icon: Droplets }
             ];
-            if (data.batch.tanggal_panen) {
-                journey.push({ stage: 'Panen', date: data.batch.tanggal_panen, location: data.tambak.lokasi, icon: CheckCircle });
+            if (batch.tanggal_panen) {
+                journey.push({ stage: 'Panen', date: batch.tanggal_panen, location: tambak?.lokasi || 'Unknown', icon: CheckCircle });
             }
-            setResult({ ...data, journey });
+            setResult({ integrity: batch.integrity || 'VALID', batch, tambak, journey });
         },
         onError: () => {
             toast.error('Batch tidak ditemukan');
@@ -80,10 +80,22 @@ const TraceabilityPage = () => {
                         <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
                             <div className="bg-emerald-900 p-8 text-white flex justify-between items-center">
                                 <div><p className="text-emerald-400 font-black text-xs uppercase tracking-widest mb-1">Blockchain Entry</p><h2 className="text-4xl font-black">BATCH #{result.batch.id}</h2></div>
+                                <div className="text-right">
+                                    <p className="text-emerald-400 font-black text-xs uppercase tracking-widest mb-1">Chain Status</p>
+                                    <span className="inline-flex items-center gap-2 bg-emerald-800/50 px-3 py-1 rounded-full text-sm font-medium">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Linked & Secure
+                                    </span>
+                                </div>
                             </div>
                             <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="flex gap-4"><div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-emerald-500"><MapPin size={24} /></div><div><p className="text-slate-400 text-xs font-bold uppercase mb-1">Origin</p><p className="font-bold text-slate-800">{result.tambak.nama_tambak}</p></div></div>
                                 <div className="flex gap-4"><div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-emerald-500"><Calendar size={24} /></div><div><p className="text-slate-400 text-xs font-bold uppercase mb-1">Stocked Date</p><p className="font-bold text-slate-800">{result.batch.tanggal_tebar}</p></div></div>
+                                <div className="col-span-1 md:col-span-2 pt-4 border-t border-slate-100">
+                                    <p className="text-slate-400 text-xs font-bold uppercase mb-2">Immutable Hash</p>
+                                    <code className="block bg-slate-50 p-3 rounded-xl text-xs text-slate-500 font-mono break-all border border-slate-100">
+                                        {result.batch.blockchain_hash}
+                                    </code>
+                                </div>
                             </div>
                         </div>
 

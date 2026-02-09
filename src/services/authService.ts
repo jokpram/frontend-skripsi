@@ -1,22 +1,77 @@
 import api from './api';
+import type { User } from '../types/models';
 
-export const login = async (role: string, credentials: any) => {
-    const response = await api.post(`/auth/login/${role}`, credentials);
-    return response.data;
+interface LoginCredentials {
+    email: string;
+    password: string;
+}
+
+interface RegisterData {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    address?: string; // Petambak, Konsumen
+    vehicle_type?: string; // Logistik
+    license_plate?: string; // Logistik
+    latitude?: number; // Konsumen
+    longitude?: number; // Konsumen
+}
+
+interface AuthResponse {
+    user: User;
+    token: string;
+}
+
+export const login = async (role: string, credentials: LoginCredentials): Promise<AuthResponse> => {
+    try {
+        const response = await api.post(`/auth/login/${role}`, credentials);
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data));
+        }
+        return response.data;
+    } catch (error: any) {
+        throw error.response?.data?.message || 'Login failed';
+    }
 };
 
-export const register = async (role: string, data: any) => {
-    // Handle FormData for file uploads if needed, but initial register usually JSON unless files required immediately
-    // If `profile_photo` is required at register, we need FormData.
-    // Based on backend, it accepts JSON or multipart. Backend uses `upload.single('image')` only on update profile? 
-    // Let's check backend authRoutes: `router.post('/register/admin', registerAdmin);`
-    // And controllers use req.body directly. No upload middleware on register routes in `authRoutes.js`.
-    // So it's JSON.
-    const response = await api.post(`/auth/register/${role}`, data);
-    return response.data;
+export const register = async (role: string, data: RegisterData): Promise<AuthResponse> => {
+    try {
+        const response = await api.post(`/auth/register/${role}`, data);
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data));
+        }
+        return response.data;
+    } catch (error: any) {
+        throw error.response?.data?.message || 'Registration failed';
+    }
+};
+
+export const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
 };
 
 export const getProfile = async () => {
-    const response = await api.get('/auth/profile');
-    return response.data;
+    try {
+        const response = await api.get('/auth/profile');
+        return response.data;
+    } catch (error: any) {
+        throw error.response?.data?.message || 'Failed to fetch profile';
+    }
+};
+
+export const updateProfile = async (data: FormData) => {
+    try {
+        const response = await api.put('/auth/profile', data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error.response?.data?.message || 'Failed to update profile';
+    }
 };
