@@ -5,7 +5,14 @@ interface CreateOrderData {
     items: {
         produk_id: number;
         qty_kg: number;
+        catatan?: string;
     }[];
+    delivery_method: string;
+    delivery_address?: string;
+    delivery_note?: string;
+    payment_method?: string;
+    insurance?: boolean;
+    expected_delivery_date?: string;
 }
 
 export const createOrder = async (data: CreateOrderData) => {
@@ -64,7 +71,7 @@ export const getMyDeliveries = async () => {
 
 export const scanPickup = async (qrToken: string) => {
     try {
-        const response = await api.post('/orders/scan/pickup', { token: qrToken });
+        const response = await api.post('/orders/scan/pickup', { qr_token: qrToken });
         return response.data;
     } catch (error: any) {
         throw error.response?.data?.message || 'Failed to process pickup scan';
@@ -73,7 +80,7 @@ export const scanPickup = async (qrToken: string) => {
 
 export const scanReceive = async (qrToken: string) => {
     try {
-        const response = await api.post('/orders/scan/receive', { token: qrToken });
+        const response = await api.post('/orders/scan/receive', { qr_token: qrToken });
         return response.data;
     } catch (error: any) {
         throw error.response?.data?.message || 'Failed to process receive scan';

@@ -8,6 +8,7 @@ import FeaturesPage from './pages/FeaturesPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import TraceabilityPage from './pages/products/Traceability';
+import ChatBox from './components/chat/ChatBox';
 import type { RootState } from './store';
 
 // Dashboards
@@ -55,6 +56,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <ChatBox />
         </div>
       </Router>
     </>

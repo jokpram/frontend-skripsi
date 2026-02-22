@@ -127,7 +127,7 @@ const AdminDashboard = () => {
                             {withdrawRequests.filter((w) => w.status === 'PENDING').map((wr: WithdrawRequest) => (
                                 <tr key={wr.id}>
                                     <td className="px-8 py-6 text-lg font-black text-emerald-600">{formatCurrency(wr.amount)}</td>
-                                    <td className="px-8 py-6 font-medium text-slate-600">{wr.bank_account}</td>
+                                    <td className="px-8 py-6 font-medium text-slate-600">{wr.bank_account_number}</td>
                                     <td className="px-8 py-6 flex gap-2 justify-center">
                                         <button onClick={() => processWithdrawMutation.mutate({ id: wr.id, action: 'APPROVED' })} className="p-3 bg-emerald-100 text-emerald-600 rounded-xl" disabled={processWithdrawMutation.isPending}>
                                             <Check size={20} />

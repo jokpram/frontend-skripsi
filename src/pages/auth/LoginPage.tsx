@@ -33,8 +33,8 @@ const LoginPage = () => {
 
         try {
             const data = await login(role, formData);
-            dispatch(setCredentials({ user: data, token: data.token }));
-            toast.success(`Selamat datang kembali, ${data.name}!`);
+            dispatch(setCredentials({ user: data.user, token: data.token }));
+            toast.success(`Selamat datang kembali, ${data.user.name}!`);
             navigate('/dashboard');
         } catch (err: any) {
             const msg = err.response?.data?.message || 'Login failed';

@@ -1,4 +1,14 @@
-// TypeScript interfaces matching backend Sequelize models
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: 'admin' | 'petambak' | 'logistik' | 'konsumen';
+    profile_photo?: string;
+    token?: string;
+    phone?: string;
+    address?: string;
+    status?: string;
+}
 
 export interface Admin {
     id: number;
@@ -13,9 +23,19 @@ export interface Petambak {
     email: string;
     phone?: string;
     address?: string;
+    nik?: string;
+    npwp?: string;
+    foto_ktp?: string;
+    foto_tambak?: string;
+    bank_name?: string;
+    bank_account_number?: string;
+    bank_account_name?: string;
     profile_photo?: string;
     etalase_photo?: string;
-    status: 'pending' | 'approved' | 'rejected';
+    status: 'pending' | 'approved' | 'rejected' | 'suspended';
+    metadata?: any;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Logistik {
@@ -26,7 +46,16 @@ export interface Logistik {
     vehicle_type?: string;
     license_plate?: string;
     profile_photo?: string;
-    status: 'pending' | 'approved' | 'rejected';
+    vehicle_capacity_kg?: number;
+    driver_name?: string;
+    driver_license_number?: string;
+    stnk_photo?: string;
+    is_cold_storage?: boolean;
+    shipping_cost_per_km?: number;
+    status: 'pending' | 'approved' | 'rejected' | 'suspended';
+    metadata?: any;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Konsumen {
@@ -35,10 +64,10 @@ export interface Konsumen {
     email: string;
     phone?: string;
     address?: string;
-    latitude?: number;
-    longitude?: number;
     profile_photo?: string;
     status: 'pending' | 'approved' | 'rejected';
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Tambak {
@@ -46,13 +75,13 @@ export interface Tambak {
     petambak_id: number;
     nama_tambak: string;
     lokasi: string;
-    latitude?: number;
-    longitude?: number;
     luas_m2: number;
     kapasitas_maks_kg: number;
     kapasitas_terpakai_kg: number;
     created_at?: string;
     updated_at?: string;
+    Petambak?: Petambak;
+    BatchUdangs?: BatchUdang[];
 }
 
 export interface BatchUdang {
@@ -65,12 +94,23 @@ export interface BatchUdang {
     kualitas_air_ph: number;
     kualitas_air_salinitas: number;
     estimasi_panen_kg: number;
+    kode_batch?: string;
+    jumlah_bibit?: number;
+    sertifikat_bibit?: string;
+    kualitas_air_suhu?: number;
+    kualitas_air_do?: number;
+    jenis_pakan?: string;
+    frekuensi_pakan_per_hari?: number;
+    catatan?: string;
+    status: 'ACTIVE' | 'HARVESTED' | 'CANCELLED';
     blockchain_hash?: string;
     blockchain_tx_hash?: string;
+    previous_hash?: string;
+    total_umur_panen_hari?: number;
+    metadata?: any;
     created_at?: string;
     updated_at?: string;
     Tambak?: Tambak;
-    integrity?: 'VALID' | 'DATA TAMPERED';
 }
 
 export interface UdangProduk {
@@ -80,6 +120,16 @@ export interface UdangProduk {
     grade: string;
     harga_per_kg: number;
     stok_kg: number;
+    kode_produk?: string;
+    size_per_kg?: string;
+    metode_panen?: string;
+    metode_pendinginan?: string;
+    sertifikat_halal?: boolean;
+    sertifikat_uji_lab?: string;
+    minimum_order_kg?: number;
+    expired_date?: string;
+    metadata?: any;
+    kategori?: 'UTAMA' | 'ECO';
     status: 'AVAILABLE' | 'SOLD_OUT' | 'ARCHIVED';
     created_at?: string;
     updated_at?: string;
@@ -93,11 +143,21 @@ export interface Order {
     total_harga: number;
     total_jarak_km?: number;
     total_biaya_logistik?: number;
+    delivery_method: string;
+    delivery_address?: string;
+    delivery_latitude?: number;
+    delivery_longitude?: number;
+    delivery_note?: string;
+    payment_method: string;
+    insurance: boolean;
+    expected_delivery_date?: string;
+    metadata?: any;
     created_at?: string;
     updated_at?: string;
     Konsumen?: Konsumen;
     OrderItems?: OrderItem[];
     Delivery?: Delivery;
+    PaymentLogs?: PaymentLog[];
 }
 
 export interface OrderItem {
@@ -107,6 +167,7 @@ export interface OrderItem {
     qty_kg: number;
     harga_per_kg: number;
     subtotal: number;
+    catatan?: string;
     UdangProduk?: UdangProduk;
 }
 
@@ -149,9 +210,13 @@ export interface WithdrawRequest {
     wallet_id: number;
     amount: number;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    bank_account: string;
+    bank_name?: string;
+    bank_account_number: string;
+    bank_account_name?: string;
+    metadata?: any;
     requested_at?: string;
     processed_at?: string;
+    User?: User; // Backend might join user
 }
 
 export interface PaymentLog {
@@ -165,11 +230,16 @@ export interface PaymentLog {
     raw_callback_json?: string;
 }
 
-// User type for auth context
-export interface User {
+export interface ChangeRequest {
     id: number;
-    name: string;
-    email: string;
-    role: 'admin' | 'petambak' | 'logistik' | 'konsumen';
-    token?: string;
+    user_id: number;
+    role: string;
+    target_model: string;
+    target_id: number;
+    changes: any;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    admin_note?: string;
+    reviewed_at?: string;
+    created_at?: string;
+    updated_at?: string;
 }

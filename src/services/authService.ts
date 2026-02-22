@@ -6,17 +6,7 @@ interface LoginCredentials {
     password: string;
 }
 
-interface RegisterData {
-    name: string;
-    email: string;
-    password: string;
-    phone?: string;
-    address?: string; // Petambak, Konsumen
-    vehicle_type?: string; // Logistik
-    license_plate?: string; // Logistik
-    latitude?: number; // Konsumen
-    longitude?: number; // Konsumen
-}
+
 
 interface AuthResponse {
     user: User;
@@ -36,9 +26,10 @@ export const login = async (role: string, credentials: LoginCredentials): Promis
     }
 };
 
-export const register = async (role: string, data: RegisterData): Promise<AuthResponse> => {
+export const register = async (role: string, data: any): Promise<AuthResponse> => {
     try {
-        const response = await api.post(`/auth/register/${role}`, data);
+        const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+        const response = await api.post(`/auth/register/${role}`, data, config);
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data));

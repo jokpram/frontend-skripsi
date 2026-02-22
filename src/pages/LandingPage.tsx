@@ -21,7 +21,7 @@ const LandingPage = () => {
                             REVOLUSI INDUSTRI UDANG INDONESIA
                         </span>
                         <h1 className="text-5xl lg:text-7xl font-black text-white mb-8 leading-tight tracking-tight">
-                            Traceability Udang <br />
+                            Crustacean Origin Network Oversight System <br />
                             <span className="text-emerald-400">
                                 Transparan & Terpercaya
                             </span>

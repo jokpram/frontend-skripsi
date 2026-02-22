@@ -8,6 +8,8 @@ import { Input } from '../../components/common/Input';
 import { Scan, Truck, MapPin, Check, Package, DollarSign, User } from 'lucide-react';
 import type { Delivery, Wallet } from '../../types/models';
 
+import { useRequestLogistikPriceUpdate } from '../../hooks/api/useChanges';
+
 const LogistikDashboard = () => {
     const [qrToken, setQrToken] = useState('');
     const [availableDeliveries, setAvailableDeliveries] = useState<Delivery[]>([]);
@@ -15,6 +17,10 @@ const LogistikDashboard = () => {
     const [wallet, setWallet] = useState<Wallet | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'available' | 'my'>('available');
+
+    const [openPriceModal, setOpenPriceModal] = useState(false);
+    const [newPrice, setNewPrice] = useState('10000');
+    const updatePriceMutation = useRequestLogistikPriceUpdate();
 
     useEffect(() => {
         fetchData();
@@ -54,6 +60,19 @@ const LogistikDashboard = () => {
         }
     };
 
+    const handleUpdatePrice = async (e: FormEvent) => {
+        e.preventDefault();
+        const price = parseFloat(newPrice);
+        if (isNaN(price) || price <= 0) return toast.error('Harga tidak valid');
+
+        updatePriceMutation.mutate({ shipping_cost_per_km: price }, {
+            onSuccess: () => {
+                setOpenPriceModal(false);
+                setNewPrice('10000');
+            }
+        });
+    };
+
     const formatCurrency = (amount: number) => {
         return `Rp ${Number(amount).toLocaleString('id-ID')}`;
     };
@@ -70,9 +89,14 @@ const LogistikDashboard = () => {
 
     return (
         <div className="container mx-auto px-4 pt-24 pb-12 min-h-screen bg-slate-50">
-            <header className="mb-8">
-                <h1 className="text-4xl font-black text-emerald-900 mb-2">Dashboard Logistik</h1>
-                <p className="text-slate-500 text-lg">Kelola pengiriman dan scan barang</p>
+            <header className="mb-8 flex md:flex-row flex-col justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-4xl font-black text-emerald-900 mb-2">Dashboard Logistik</h1>
+                    <p className="text-slate-500 text-lg">Kelola pengiriman dan scan barang</p>
+                </div>
+                <Button onClick={() => setOpenPriceModal(true)} variant="outline">
+                    <DollarSign size={18} className="mr-2" /> Update Tarif
+                </Button>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -229,6 +253,30 @@ const LogistikDashboard = () => {
                     )
                 )}
             </section>
+
+            {openPriceModal && (
+                <div className="fixed inset-0 z-[2000] flex items-center justify-center px-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setOpenPriceModal(false)} />
+                    <div className="relative bg-white p-8 rounded-[2rem] w-full max-w-md shadow-2xl">
+                        <h2 className="text-2xl font-black text-slate-900 mb-6">Update Tarif Pengiriman</h2>
+                        <form onSubmit={handleUpdatePrice} className="space-y-4">
+                            <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-yellow-800 text-sm mb-4">
+                                Perubahan tarif memerlukan persetujuan Admin.
+                            </div>
+                            <Input
+                                label="Tarif per Km (Rp)"
+                                type="number"
+                                value={newPrice}
+                                onChange={(e) => setNewPrice(e.target.value)}
+                                required
+                            />
+                            <Button type="submit" className="w-full" disabled={updatePriceMutation.isPending}>
+                                {updatePriceMutation.isPending ? 'Mengirim...' : 'Kirim Permintaan'}
+                            </Button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

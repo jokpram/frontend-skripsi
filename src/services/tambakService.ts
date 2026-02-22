@@ -37,7 +37,7 @@ export const getBatches = async () => {
     }
 };
 
-export const updateHarvest = async (batchId: number, data: { tanggal_panen: string; estimasi_panen_kg: number }) => {
+export const updateHarvest = async (batchId: number, data: { tanggal_panen: string; estimasi_panen_kg?: number; total_umur_panen_hari?: number }) => {
     try {
         const response = await api.put(`/tambak/batch/${batchId}/harvest`, data);
         return response.data;

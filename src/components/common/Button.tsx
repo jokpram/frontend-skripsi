@@ -1,12 +1,5 @@
 import React from 'react';
-import { clsx } from 'clsx';
-import type { ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-// Utility for class merging (added tailwind-merge)
-export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
+import { cn } from '../../utils/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'outline' | 'ghost';
